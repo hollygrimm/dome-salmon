@@ -41,6 +41,18 @@ func _init_multimesh() -> void:
 	var mesh := CapsuleMesh.new()
 	mesh.radius = 0.08
 	mesh.height = 0.5
+	
+	# Apply salmon body shader
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/salmon_body.gdshader")
+	mat.set_shader_parameter("base_color", Color(0.72, 0.58, 0.52, 1.0))
+	mat.set_shader_parameter("belly_color", Color(0.88, 0.82, 0.76, 1.0))
+	mat.set_shader_parameter("spawn_color", Color(0.78, 0.18, 0.12, 1.0))
+	mat.set_shader_parameter("undulation_speed", 3.5)
+	mat.set_shader_parameter("undulation_amplitude", 0.06)
+	mat.set_shader_parameter("wave_frequency", 1.5)
+	mesh.surface_set_material(0, mat)
+
 	mm.mesh = mesh
 	multimesh = mm
 
