@@ -10,14 +10,17 @@ Dome visualization: 5 OSC sensor performers → hundreds of salmon → TouchDesi
 dome_salmon/
 ├── project.godot
 ├── scripts/
-│   ├── OSCReceiver.gd      ← Autoload: UDP listener + OSC parser
-│   ├── ParameterBank.gd    ← Autoload: smoothed behavioral params
-│   ├── SalmonSchool.gd     ← MultiMeshInstance3D boids controller
-│   └── Main.gd             ← Scene root, debug overlay, keyboard stubs
+│   ├── OSCReceiver.gd        ← Autoload: UDP listener + OSC parser
+│   ├── ParameterBank.gd      ← Autoload: smoothed behavioral params
+│   ├── SalmonSchool.gd       ← MultiMeshInstance3D boids controller
+│   ├── RiverEnvironment.gd   ← Water, riverbed, lighting, fog
+│   └── Main.gd               ← Scene root, debug overlay, keyboard stubs
 ├── shaders/
-│   └── salmon_body.gdshader ← Vertex undulation + spawning coloration
+│   ├── salmon_body.gdshader  ← Vertex undulation + spawning coloration
+│   ├── water_surface.gdshader ← Animated translucent water
+│   └── riverbed.gdshader     ← Rocky bed with caustic light
 ├── scenes/
-│   └── Main.tscn           ← Build this manually (see Scene Setup below)
+│   └── Main.tscn             ← Build this manually (see Scene Setup below)
 └── assets/
     └── (salmon.glb goes here when ready)
 ```
@@ -51,12 +54,28 @@ Main  (Node3D)  ← attach Main.gd "Attach Script..."
 │     shadow on checkbox
 ├── SalmonSchool  (MultiMeshInstance3D)  ← attach SalmonSchool.gd
 │     position = (0, 0, 0)
+├── RiverEnvironment  (Node3D)  ← attach RiverEnvironment.gd
+│   ├── WaterSurface  (MeshInstance3D)   ← mesh built in code
+│   ├── Riverbed      (MeshInstance3D)   ← mesh built in code
+│   ├── SunLight      (DirectionalLight3D)
+│   └── WorldEnvironment (WorldEnvironment)
 └── DebugPanel  (CanvasLayer)
       └── VBox  (VBoxContainer)
             anchors: top-left (Layout)
             └── Label  (name it "Label")
                   custom_min_size = (400, 0) under Layout
 ```
+
+---
+
+## How the Environment Reacts to Performers
+
+| Performer action       | Environmental response                         |
+|------------------------|------------------------------------------------|
+| Key 1 (swim_urgency)   | Water waves speed up, current intensifies      |
+| Key 4 (evasion_drive)  | Turbulence spikes, sunlight dims (predator)    |
+| Keys 1+4 together      | Maximum turbulence — rapids conditions         |
+| Key 5 (rest)           | Water calms, caustics slow, glassy surface     |
 
 ---
 
@@ -103,8 +122,8 @@ simulate performer input. Press D to toggle the debug overlay.
 
 ## Milestone Checklist
 
-- [ ] **M1: Pipeline** — Godot window → Screen Capture TOP in TD → one projector
-- [ ] **M2: Boids** — SalmonSchool running with keyboard stubs, looks good in TD
+- [x] **M1: Pipeline** — Godot window → Screen Capture TOP in TD → one projector
+- [x] **M2: Boids** — SalmonSchool running with keyboard stubs, looks good in TD
 - [ ] **M3: Shader** — salmon_body.gdshader on the MultiMesh, undulation working
 - [ ] **M4: OSC** — real sensor data flowing, ParameterBank driving behavior
 - [ ] **M5: Dome** — VIOSO calibration, all 5 projectors, full school in the dome

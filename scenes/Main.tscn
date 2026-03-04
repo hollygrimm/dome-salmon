@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bnmc72yq2x087" path="res://scripts/Main.gd" id="1_elqb8"]
 [ext_resource type="Script" uid="uid://dhox8ddaro12l" path="res://scripts/SalmonSchool.gd" id="2_rvslj"]
+[ext_resource type="Script" uid="uid://bocy2ikkhn0eo" path="res://scripts/RiverEnvironment.gd" id="3_0bbpv"]
 
 [node name="Main" type="Node3D" unique_id=1510009090]
 script = ExtResource("1_elqb8")
@@ -25,3 +26,14 @@ offset_bottom = 40.0
 [node name="Label" type="Label" parent="DebugPanel/VBox" unique_id=1227553065]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
+
+[node name="RiverEnvironment" type="Node3D" parent="." unique_id=1946375163]
+script = ExtResource("3_0bbpv")
+
+[node name="WaterSurface" type="MeshInstance3D" parent="RiverEnvironment" unique_id=446161283]
+
+[node name="Riverbed" type="MeshInstance3D" parent="RiverEnvironment" unique_id=413324962]
+
+[node name="SunLight" type="DirectionalLight3D" parent="RiverEnvironment" unique_id=738592266]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="RiverEnvironment" unique_id=1684484000]
