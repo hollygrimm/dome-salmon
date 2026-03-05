@@ -12,7 +12,8 @@ extends MultiMeshInstance3D
 
 # --- Configuration (edit in Inspector) ---
 @export var fish_count: int = 300
-@export var spawn_volume: Vector3 = Vector3(20.0, 4.0, 40.0)  # width, height, depth
+@export var spawn_volume: Vector3 = Vector3(20.0, 3.0, 40.0)  # width, height, depth
+@export var spawn_center_y: float = 0.05  # centers school in water column (surface=1.8, bed=-1.7)
 @export var upstream_direction: Vector3 = Vector3(0, 0, -1)   # -Z = upstream
 
 # --- Boids weights (tunable) ---
@@ -65,9 +66,11 @@ func _spawn_fish() -> void:
 	for i in fish_count:
 		var pos := Vector3(
 			randf_range(-spawn_volume.x * 0.5, spawn_volume.x * 0.5),
-			randf_range(-spawn_volume.y * 0.5, spawn_volume.y * 0.5),
+			spawn_center_y,
 			randf_range(-spawn_volume.z * 0.5, spawn_volume.z * 0.5)
 		)
+		var y_offset := randf_range(-spawn_volume.y * 0.5, spawn_volume.y * 0.5)
+		pos.y = spawn_center_y + _soft_clamp(y_offset, spawn_volume.y * 0.5)
 		_positions.append(pos)
 		# Initial velocity: mostly upstream with small random spread
 		_velocities.append(upstream_direction * 1.5 + Vector3(
@@ -158,7 +161,7 @@ func _update_boids(delta: float) -> void:
 
 		# Soft boundary — push back toward spawn volume center
 		pos.x = _soft_clamp(pos.x, spawn_volume.x * 0.5)
-		pos.y = _soft_clamp(pos.y, spawn_volume.y * 0.5)
+		pos.y = spawn_center_y + _soft_clamp(pos.y - spawn_center_y, spawn_volume.y * 0.5)
 		pos.z = _soft_clamp(pos.z, spawn_volume.z * 0.5)
 
 		_positions[i]  = pos
