@@ -87,15 +87,15 @@ func _process(delta: float) -> void:
 
 
 func _update_boids(delta: float) -> void:
-	var speed       := ParameterBank.school_speed
-	var sep_radius  := ParameterBank.separation_radius
-	var coh_radius  := sep_radius * 3.0
-	var up_force    := ParameterBank.upstream_force
+	var speed       : float = ParameterBank.school_speed
+	var sep_radius  : float = ParameterBank.separation_radius
+	var coh_radius  : float = sep_radius * 3.0
+	var up_force    : float = ParameterBank.upstream_force
 	var cohesion_w  : float = lerp(weight_cohesion, weight_cohesion * 2.5,
 							ParameterBank.school_cohesion)
-	var evasion     := ParameterBank.evasion_drive
-	var rest        := ParameterBank.rest_factor
-	var vert_energy := ParameterBank.vertical_energy
+	var evasion     : float = ParameterBank.evasion_drive
+	var rest        : float = ParameterBank.rest_factor
+	var vert_energy : float = ParameterBank.vertical_energy
 
 	for i in fish_count:
 		var pos := _positions[i]
