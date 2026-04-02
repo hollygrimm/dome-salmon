@@ -21,6 +21,8 @@ extends MultiMeshInstance3D
 @export var weight_alignment:  float = 1.0
 @export var weight_cohesion:   float = 0.8
 @export var weight_upstream:   float = 1.2
+@export var fish_scale:          float = 25.0          # scale each fish instance — adjust for GLB models
+@export var fish_rotation_offset: Vector3 = Vector3(180, 90, 80) # degrees — fix mesh orientation (try Y: 90, -90, 180)
 
 # --- Internal state ---
 var _positions: PackedVector3Array
@@ -38,11 +40,10 @@ func _init_multimesh() -> void:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.instance_count = fish_count
-	# Mesh: use a simple capsule as placeholder until salmon.glb is imported
-	var mesh := CapsuleMesh.new()
-	mesh.radius = 0.08
-	mesh.height = 0.5
-	
+
+	# Try to load salmon.glb — fall back to capsule if not present
+	var mesh: Mesh = _load_fish_mesh()
+
 	# Apply salmon body shader
 	var mat := ShaderMaterial.new()
 	mat.shader = load("res://shaders/salmon_body.gdshader")
@@ -52,10 +53,45 @@ func _init_multimesh() -> void:
 	mat.set_shader_parameter("undulation_speed", 3.5)
 	mat.set_shader_parameter("undulation_amplitude", 0.06)
 	mat.set_shader_parameter("wave_frequency", 1.5)
-	mesh.surface_set_material(0, mat)
+	for s in mesh.get_surface_count():
+		mesh.surface_set_material(s, mat)
 
 	mm.mesh = mesh
 	multimesh = mm
+
+
+func _load_fish_mesh() -> Mesh:
+	# Look for salmon.glb in assets/ — swap in Ashley's model when ready.
+	# Falls back to capsule placeholder if the file isn't there yet.
+	var scene := load("res://assets/salmon.glb") as PackedScene
+	if scene:
+		var temp := scene.instantiate()
+		var mesh_instance := _find_mesh_instance(temp)
+		
+		if mesh_instance:
+			var mesh := mesh_instance.mesh.duplicate() as Mesh
+			temp.free()
+			print("[SalmonSchool] Loaded salmon.glb")
+			return mesh
+		temp.free()
+		push_warning("[SalmonSchool] salmon.glb loaded but no MeshInstance3D found inside.")
+
+	# Fallback
+	print("[SalmonSchool] salmon.glb not found — using capsule placeholder.")
+	var capsule := CapsuleMesh.new()
+	capsule.radius = 0.08
+	capsule.height = 0.5
+	return capsule
+
+
+func _find_mesh_instance(node: Node) -> MeshInstance3D:
+	if node is MeshInstance3D:
+		return node
+	for child in node.get_children():
+		var result := _find_mesh_instance(child)
+		if result:
+			return result
+	return null
 
 
 func _spawn_fish() -> void:
@@ -173,8 +209,10 @@ func _write_transforms() -> void:
 		var vel := _velocities[i]
 		if vel.length_squared() < 0.0001:
 			continue
-		# Orient fish along velocity (nose points in direction of travel)
-		var basis := Basis.looking_at(vel.normalized(), Vector3.UP)
+		# Orient fish along velocity, apply scale and mesh rotation correction
+		var correction := Basis.from_euler(fish_rotation_offset * (PI / 180.0))
+		var basis := Basis.looking_at(vel.normalized(), Vector3.UP) * correction
+		basis = basis.scaled(Vector3(fish_scale, fish_scale, fish_scale))
 		var t := Transform3D(basis, _positions[i])
 		multimesh.set_instance_transform(i, t)
 

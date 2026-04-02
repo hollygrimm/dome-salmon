@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://b1rxg7pmionte"]
+
+[ext_resource type="Script" uid="uid://bakfomu3tmmhm" path="res://scripts/FishDemo.gd" id="1_8kb31"]
+[ext_resource type="Script" uid="uid://riqch16fg6xu" path="res://scripts/CulturalValue.gd" id="2_8qknw"]
+[ext_resource type="Resource" uid="uid://c4euxdgb26qa7" path="res://assets/playful.tres" id="3_j67qc"]
+
+[node name="FishDemo" type="Node3D" unique_id=1076797675]
+script = ExtResource("1_8kb31")
+values = Array[ExtResource("2_8qknw")]([ExtResource("3_j67qc")])
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1104438270]
+transform = Transform3D(1, 0, 0, 0, 0.9659258, 0.25881904, 0, -0.25881904, 0.9659258, 0, 2, 6)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1974690052]
+light_energy = 2.0

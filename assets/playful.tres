@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="CulturalValue" format=3 uid="uid://c4euxdgb26qa7"]
+
+[ext_resource type="Script" uid="uid://riqch16fg6xu" path="res://scripts/CulturalValue.gd" id="1_1qqvp"]
+
+[resource]
+script = ExtResource("1_1qqvp")
+playfulness = 0.029
+metadata/_custom_type_script = "uid://riqch16fg6xu"
