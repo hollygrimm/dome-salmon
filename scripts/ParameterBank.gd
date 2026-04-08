@@ -61,8 +61,9 @@ func _derive_parameters() -> void:
 	# Separation: loosen when evasion is high (school disperses in panic)
 	separation_radius = lerp(0.8, 2.5, evasion_drive)
 
-	# Upstream force: reduced by rest, amplified by urgency
-	upstream_force = lerp(0.2, 3.0, swim_urgency) * (1.0 - rest_factor * 0.7)
+	# Upstream force: reduced by rest, amplified by urgency.
+	# Baseline 1.5 keeps fish actively swimming upstream even with no OSC input.
+	upstream_force = lerp(1.5, 3.5, swim_urgency) * (1.0 - rest_factor * 0.7)
 
 
 # --- Debug helper ---

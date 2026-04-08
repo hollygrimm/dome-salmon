@@ -12,8 +12,9 @@ extends MultiMeshInstance3D
 
 # --- Configuration (edit in Inspector) ---
 @export var fish_count: int = 300
-@export var spawn_volume: Vector3 = Vector3(20.0, 3.0, 40.0)  # width, height, depth
+@export var spawn_volume: Vector3 = Vector3(20.0, 3.0, 60.0)  # width, height, depth (Z matches river length)
 @export var spawn_center_y: float = 0.05  # centers school in water column (surface=1.8, bed=-1.7)
+@export var spawn_center_z: float = 0.0  # 0 = river center; range = [-30, +30] with spawn_volume.z=60
 @export var upstream_direction: Vector3 = Vector3(0, 0, -1)   # -Z = upstream
 
 # --- Boids weights (tunable) ---
@@ -22,7 +23,20 @@ extends MultiMeshInstance3D
 @export var weight_cohesion:   float = 0.8
 @export var weight_upstream:   float = 1.2
 @export var fish_scale:          float = 25.0          # scale each fish instance — adjust for GLB models
-@export var fish_rotation_offset: Vector3 = Vector3(180, 90, 80) # degrees — fix mesh orientation (try Y: 90, -90, 180)
+@export var fish_rotation_offset: Vector3 = Vector3(0, -90, -80) # degrees — fix mesh orientation (try Y: 90, -90, 180)
+
+# --- River current coupling (set by Main.gd at runtime) ---
+## RiverCurrent node providing flow-field samples. Optional — boids fall
+## back to pure upstream bias when null.
+var river_current: RiverCurrent = null
+## Flow contribution to steering. Note: steering is treated as acceleration
+## while flow is velocity (m/s), so values above ~0.3 will dominate the
+## boid forces and collapse the school. 0.15 is a gentle directional bias.
+@export_range(0.0, 2.0, 0.01) var current_influence: float = 0.15
+@export_range(0.0, 2.0, 0.05) var karman_gait_sensitivity: float = 0.4
+## How much the upstream bias is dampened when fish is in an eddy (pool holding).
+## Only the upstream component is dampened — separation/cohesion are preserved.
+@export_range(0.0, 1.0, 0.05) var pool_rest_factor: float = 0.85
 
 # --- Internal state ---
 var _positions: PackedVector3Array
@@ -103,7 +117,7 @@ func _spawn_fish() -> void:
 		var pos := Vector3(
 			randf_range(-spawn_volume.x * 0.5, spawn_volume.x * 0.5),
 			spawn_center_y,
-			randf_range(-spawn_volume.z * 0.5, spawn_volume.z * 0.5)
+			spawn_center_z + randf_range(-spawn_volume.z * 0.5, spawn_volume.z * 0.5)
 		)
 		var y_offset := randf_range(-spawn_volume.y * 0.5, spawn_volume.y * 0.5)
 		pos.y = spawn_center_y + _soft_clamp(y_offset, spawn_volume.y * 0.5)
@@ -165,8 +179,28 @@ func _update_boids(delta: float) -> void:
 			steering += align_force * weight_alignment
 			steering += to_center  * cohesion_w
 
-		# Upstream bias
-		steering += upstream_direction * up_force * weight_upstream
+		# Upstream bias — accumulated separately so pool-holding can dampen
+		# *only* this component without nuking separation/cohesion forces.
+		var upstream_bias := upstream_direction * up_force * weight_upstream
+
+		# River current — flow field drift, Kármán gait, pool resting
+		if river_current != null:
+			var flow := river_current.sample(pos)
+			steering += flow * current_influence
+
+			# Kármán gait: when flow has strong rotational component (vortex
+			# wake behind a rock), tail-beat syncs to vortex frequency and
+			# extracts energy from the street. Net cost approaches zero.
+			var curl := _estimate_flow_curl(pos, flow)
+			if curl > 0.15:
+				steering += flow * karman_gait_sensitivity * curl
+
+			# Pool holding: if local flow opposes upstream direction, fish is
+			# in an eddy — dampen the active upstream urge so it stages there.
+			if flow.dot(upstream_direction) < -0.1:
+				upstream_bias *= (1.0 - pool_rest_factor)
+
+		steering += upstream_bias
 
 		# Evasion: add perpendicular swirl
 		if evasion > 0.1:
@@ -198,7 +232,7 @@ func _update_boids(delta: float) -> void:
 		# Soft boundary — push back toward spawn volume center
 		pos.x = _soft_clamp(pos.x, spawn_volume.x * 0.5)
 		pos.y = spawn_center_y + _soft_clamp(pos.y - spawn_center_y, spawn_volume.y * 0.5)
-		pos.z = _soft_clamp(pos.z, spawn_volume.z * 0.5)
+		pos.z = spawn_center_z + _soft_clamp(pos.z - spawn_center_z, spawn_volume.z * 0.5)
 
 		_positions[i]  = pos
 		_velocities[i] = vel
@@ -211,10 +245,23 @@ func _write_transforms() -> void:
 			continue
 		# Orient fish along velocity, apply scale and mesh rotation correction
 		var correction := Basis.from_euler(fish_rotation_offset * (PI / 180.0))
-		var basis := Basis.looking_at(vel.normalized(), Vector3.UP) * correction
-		basis = basis.scaled(Vector3(fish_scale, fish_scale, fish_scale))
-		var t := Transform3D(basis, _positions[i])
+		var fish_basis := Basis.looking_at(vel.normalized(), Vector3.UP) * correction
+		fish_basis = fish_basis.scaled(Vector3(fish_scale, fish_scale, fish_scale))
+		var t := Transform3D(fish_basis, _positions[i])
 		multimesh.set_instance_transform(i, t)
+
+
+## Cheap XZ-plane curl estimate. Compares flow at two small offsets to detect
+## rotational structure (vortex street). Returns |curl_y|.
+func _estimate_flow_curl(pos: Vector3, flow_at_center: Vector3) -> float:
+	if river_current == null:
+		return 0.0
+	var offset := 0.4
+	var flow_dx := river_current.sample(pos + Vector3(offset, 0.0, 0.0))
+	var flow_dz := river_current.sample(pos + Vector3(0.0, 0.0, offset))
+	var curl_y := ((flow_dz.x - flow_at_center.x) / offset) \
+				- ((flow_dx.z - flow_at_center.z) / offset)
+	return absf(curl_y)
 
 
 func _soft_clamp(value: float, half_extent: float) -> float:

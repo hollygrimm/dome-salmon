@@ -22,7 +22,7 @@ uniform float wave_height  : hint_range(0.0, 0.5)  = 0.06;
 uniform float turbulence   : hint_range(0.0, 1.0)  = 0.2;  // driven by swim_urgency
 
 // How much you can see through the water
-uniform float transparency : hint_range(0.0, 1.0)  = 0.80;
+uniform float transparency : hint_range(0.0, 1.0)  = 1.0;
 
 // Fake caustics intensity
 uniform float caustic_strength : hint_range(0.0, 1.0) = 0.3;
