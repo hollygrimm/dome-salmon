@@ -15,6 +15,14 @@ run/main_scene="uid://cia312hh6yv8n"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[display]
+
+window/size/viewport_width=2160
+window/size/viewport_height=2160
+window/size/mode=3
+window/stretch/mode="viewport"
+window/stretch/aspect="keep"
+
 [autoload]
 
 OSCReceiver="*uid://c525npl5ihfwv"
@@ -27,3 +35,4 @@ ParameterBank="*uid://ch1k0aha5tye"
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+scaling_3d/scale=1.0

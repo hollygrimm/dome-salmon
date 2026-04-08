@@ -23,7 +23,7 @@ extends MultiMeshInstance3D
 @export var weight_cohesion:   float = 0.8
 @export var weight_upstream:   float = 1.2
 @export var fish_scale:          float = 25.0          # scale each fish instance — adjust for GLB models
-@export var fish_rotation_offset: Vector3 = Vector3(0, -90, -80) # degrees — fix mesh orientation (try Y: 90, -90, 180)
+@export var fish_rotation_offset: Vector3 = Vector3(0, -90, -60) # degrees — fix mesh orientation (try Y: 90, -90, 180)
 
 # --- River current coupling (set by Main.gd at runtime) ---
 ## RiverCurrent node providing flow-field samples. Optional — boids fall
@@ -232,7 +232,19 @@ func _update_boids(delta: float) -> void:
 		# Soft boundary — push back toward spawn volume center
 		pos.x = _soft_clamp(pos.x, spawn_volume.x * 0.5)
 		pos.y = spawn_center_y + _soft_clamp(pos.y - spawn_center_y, spawn_volume.y * 0.5)
-		pos.z = spawn_center_z + _soft_clamp(pos.z - spawn_center_z, spawn_volume.z * 0.5)
+		# No Z soft-clamp — fish exit upstream and respawn at the downstream end
+		# (treadmill loop). Without this, 300 fish pile against the headwaters wall.
+		var upstream_end: float = spawn_center_z - spawn_volume.z * 0.5
+		var downstream_end: float = spawn_center_z + spawn_volume.z * 0.5
+		if pos.z < upstream_end:
+			pos.z = downstream_end
+			pos.x = randf_range(-spawn_volume.x * 0.5, spawn_volume.x * 0.5)
+			pos.y = spawn_center_y + randf_range(
+					-spawn_volume.y * 0.4, spawn_volume.y * 0.4)
+			vel = upstream_direction * 1.5 + Vector3(
+					randf_range(-0.3, 0.3),
+					randf_range(-0.1, 0.1),
+					randf_range(-0.3, 0.3))
 
 		_positions[i]  = pos
 		_velocities[i] = vel

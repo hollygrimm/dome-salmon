@@ -48,9 +48,18 @@ void fragment() {
 	// Spawning coloration overlay (flanks turn red/pink)
 	body_col = mix(body_col, spawn_color, spawn_color_amount * (1.0 - belly_mask));
 
+	// Fake scale pattern — high-frequency stripes along body length,
+	// modulates roughness so light catches differently across flanks.
+	float scales = sin(UV.y * 180.0) * sin(UV.x * 120.0);
+	float scale_mask = 0.5 + 0.5 * scales;
+
 	ALBEDO = body_col.rgb * texture(texture_albedo, UV).rgb;
-	ROUGHNESS = 0.3;
-	METALLIC = 0.05;
-	// Subtle iridescence via specular
-	SPECULAR = 0.6;
+	// Wetter/rougher on the back, smoother on the belly; scales add variance.
+	ROUGHNESS = mix(0.65, 0.45, belly_mask) + scale_mask * 0.08;
+	METALLIC = 0.0;
+	SPECULAR = 0.35;
+
+	// Fresnel rim — wet sheen where light grazes the body edge.
+	float fresnel = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
+	ALBEDO += vec3(0.25, 0.32, 0.38) * fresnel * 0.4;
 }

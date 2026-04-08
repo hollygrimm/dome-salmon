@@ -43,9 +43,13 @@ var _debug_visible := true
 
 
 func _ready() -> void:
-	# Set window to 1920×1080 — TouchDesigner Screen Capture TOP grabs this
-	# Until a Godot 4 Syphon GDExtension exists, Screen Capture is the bridge.
-	DisplayServer.window_set_size(Vector2i(1920, 1080))
+	# Dome demo: launch fullscreen on the second display if present.
+	# Dome is 1:1 aspect; Mac Mini M4 second display maxes at 3840x2160,
+	# so a square viewport letterboxes cleanly via stretch aspect "keep".
+	var screen_count := DisplayServer.get_screen_count()
+	var target_screen := 1 if screen_count > 1 else 0
+	DisplayServer.window_set_current_screen(target_screen)
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	DisplayServer.window_set_title("DomeSalmon — OSC Port 8000")
 	print("[Main] Ready. OSC listening on port 8000.")
 	print("[Main] Keyboard stubs: 1-5 to simulate performers, D to toggle debug.")
@@ -156,5 +160,5 @@ func _update_debug() -> void:
 		"=== DomeSalmon Debug ===\n" +
 		ParameterBank.debug_string() +
 		"\n[D] toggle  [1-5] simulate performers  [ESC] quit\n" +
-		"OSC port: 8000  |  Syphon: use Screen Capture TOP in TD"
+		"OSC port: 8000  |  Display: fullscreen screen 1 → DisplayPort → ScreenBerry"
 	)
