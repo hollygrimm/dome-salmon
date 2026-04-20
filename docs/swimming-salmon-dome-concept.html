@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swimming Salmon — Dome Concept</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inconsolata:wght@300;400&display=swap');
+
+  :root {
+    --river:    #0d2b3e;
+    --water:    #1a4a6b;
+    --silver:   #8bb8c8;
+    --spawn:    #c04a2a;
+    --forest:   #1a3020;
+    --canopy:   #2d5a3d;
+    --ghost:    rgba(140, 200, 180, 0.35);
+    --dentalium:#d4b896;
+    --ink:      #f0ece4;
+    --dim:      rgba(240,236,228,0.45);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #080f14;
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  header {
+    padding: 3rem 4rem 1.5rem;
+    border-bottom: 1px solid rgba(240,236,228,0.12);
+  }
+
+  header h1 {
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+  }
+
+  header h1 em { font-style: italic; color: var(--silver); }
+
+  header p {
+    margin-top: 0.6rem;
+    font-size: 1rem;
+    font-family: 'Inconsolata', monospace;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    font-weight: 300;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 2rem;
+    padding: 2.5rem 4rem;
+    align-items: start;
+  }
+
+  /* ── CROSS-SECTION DIAGRAM ── */
+  .dome-wrap {
+    position: relative;
+  }
+
+  .dome-label {
+    font-family: 'Inconsolata', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  svg#dome {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+  }
+
+  .card {
+    border: 1px solid rgba(240,236,228,0.1);
+    padding: 1.4rem 1.6rem;
+    background: rgba(255,255,255,0.03);
+  }
+
+  .card h3 {
+    font-size: 0.7rem;
+    font-family: 'Inconsolata', monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--silver);
+    margin-bottom: 0.9rem;
+  }
+
+  .card p, .card li {
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--ink);
+    font-weight: 300;
+  }
+
+  .card ul { padding-left: 1.1rem; }
+  .card li { margin-bottom: 0.4rem; }
+
+  .axis-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .axis-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+  }
+
+  .axis-icon.horiz { background: rgba(26,74,107,0.6); }
+  .axis-icon.vert  { background: rgba(26,48,32,0.7); }
+
+  .axis-text h4 {
+    font-size: 1rem;
+    font-weight: 400;
+    margin-bottom: 0.2rem;
+  }
+
+  .axis-text p {
+    font-size: 0.9rem;
+    color: var(--dim);
+    line-height: 1.5;
+  }
+
+  /* ── YEAR SLIDER ── */
+  .year-section {
+    padding: 2rem 4rem 1rem;
+    border-top: 1px solid rgba(240,236,228,0.08);
+  }
+
+  .year-section h2 {
+    font-size: 0.72rem;
+    font-family: 'Inconsolata', monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 1.5rem;
+  }
+
+  .timeline {
+    position: relative;
+    height: 90px;
+    margin-bottom: 1rem;
+  }
+
+  .timeline-track {
+    position: absolute;
+    top: 50%;
+    left: 0; right: 0;
+    height: 2px;
+    background: rgba(240,236,228,0.15);
+    transform: translateY(-50%);
+  }
+
+  .timeline-bars {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .bar {
+    flex: 1;
+    background: var(--water);
+    opacity: 0.7;
+    transition: opacity 0.2s, background 0.3s;
+    cursor: pointer;
+    min-height: 2px;
+  }
+
+  .bar:hover { opacity: 1; }
+  .bar.active { background: var(--silver); opacity: 1; }
+  .bar.collapse { background: var(--spawn); }
+
+  .year-info {
+    display: flex;
+    align-items: baseline;
+    gap: 2rem;
+    margin-top: 0.8rem;
+  }
+
+  .year-display {
+    font-size: 3.5rem;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  .count-display {
+    font-family: 'Inconsolata', monospace;
+    font-size: 0.85rem;
+    color: var(--dim);
+  }
+
+  .count-display span {
+    display: block;
+    font-size: 1.6rem;
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+  }
+
+  .note-display {
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--silver);
+    margin-left: auto;
+    max-width: 280px;
+    line-height: 1.5;
+    text-align: right;
+  }
+
+  /* ── SPATIAL NOTES ── */
+  .spatial-section {
+    padding: 1.5rem 4rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5rem;
+    border-top: 1px solid rgba(240,236,228,0.08);
+  }
+
+  .spatial-note {
+    padding: 1.2rem 1.4rem;
+    border-left: 2px solid rgba(240,236,228,0.15);
+  }
+
+  .spatial-note h4 {
+    font-family: 'Inconsolata', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--silver);
+    margin-bottom: 0.6rem;
+  }
+
+  .spatial-note p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--ink);
+    font-weight: 300;
+  }
+
+  .quote-block {
+    padding: 1.5rem 4rem;
+    border-top: 1px solid rgba(240,236,228,0.08);
+  }
+
+  blockquote {
+    font-size: clamp(1.1rem, 2vw, 1.4rem);
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--silver);
+    max-width: 700px;
+  }
+
+  blockquote cite {
+    display: block;
+    margin-top: 0.8rem;
+    font-size: 0.8rem;
+    font-style: normal;
+    font-family: 'Inconsolata', monospace;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><em>Swimming Salmon</em> &amp; Salmon Afterlives<br>Dome Installation — Spatial Concept</h1>
+  <p>Ashley Cordes (Kōkwel) &nbsp;·&nbsp; IAIA Digital Arts Lab &nbsp;·&nbsp; Coquille River Chinook 1986–2026</p>
+</header>
+
+<div class="layout">
+
+  <!-- DOME CROSS-SECTION -->
+  <div class="dome-wrap">
+    <div class="dome-label">Dome cross-section — looking upstream (west)</div>
+    <svg id="dome" viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="skyGrad" cx="50%" cy="0%" r="80%">
+          <stop offset="0%" stop-color="#1a3020"/>
+          <stop offset="100%" stop-color="#080f14"/>
+        </radialGradient>
+        <radialGradient id="waterGrad" cx="50%" cy="100%" r="60%">
+          <stop offset="0%" stop-color="#1a4a6b"/>
+          <stop offset="100%" stop-color="#0d2b3e"/>
+        </radialGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="softglow">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <clipPath id="domeClip">
+          <ellipse cx="350" cy="210" rx="300" ry="200"/>
+        </clipPath>
+      </defs>
+
+      <!-- Dome shell -->
+      <ellipse cx="350" cy="210" rx="308" ry="208" fill="none" stroke="rgba(240,236,228,0.12)" stroke-width="1.5"/>
+
+      <!-- Sky / forest ceiling -->
+      <path d="M 50 210 A 300 200 0 0 1 650 210 Z" fill="url(#skyGrad)" clip-path="url(#domeClip)"/>
+
+      <!-- Ghost canopy — denser on left (past/upstream) -->
+      <g opacity="0.55" filter="url(#softglow)">
+        <!-- Dense canopy over headwaters (left = past) -->
+        <ellipse cx="170" cy="145" rx="95" ry="38" fill="#2d5a3d" opacity="0.7"/>
+        <ellipse cx="200" cy="120" rx="70" ry="28" fill="#3a7050" opacity="0.5"/>
+        <ellipse cx="135" cy="130" rx="55" ry="22" fill="#2d5a3d" opacity="0.6"/>
+        <!-- Medium canopy mid-river -->
+        <ellipse cx="350" cy="155" rx="75" ry="28" fill="#2d5a3d" opacity="0.4"/>
+        <ellipse cx="320" cy="135" rx="50" ry="18" fill="#3a7050" opacity="0.3"/>
+        <!-- Thin canopy near estuary (right = present) -->
+        <ellipse cx="520" cy="168" rx="45" ry="16" fill="#2d5a3d" opacity="0.2"/>
+        <ellipse cx="570" cy="178" rx="25" ry="10" fill="#2d5a3d" opacity="0.12"/>
+      </g>
+
+      <!-- Ghost salmon particles rising -->
+      <g opacity="0.4" filter="url(#glow)">
+        <circle cx="155" cy="195" r="2.5" fill="#8bb8c8"/>
+        <circle cx="180" cy="175" r="2" fill="#8bb8c8"/>
+        <circle cx="165" cy="158" r="1.5" fill="#8bb8c8"/>
+        <circle cx="195" cy="168" r="2" fill="#8bb8c8"/>
+        <circle cx="140" cy="182" r="1.5" fill="#8bb8c8"/>
+        <circle cx="210" cy="185" r="2" fill="#8bb8c8"/>
+        <circle cx="230" cy="162" r="1.5" fill="#8bb8c8"/>
+        <!-- fewer ghosts mid -->
+        <circle cx="350" cy="198" r="2" fill="#8bb8c8"/>
+        <circle cx="370" cy="178" r="1.5" fill="#8bb8c8"/>
+        <circle cx="335" cy="185" r="1.5" fill="#8bb8c8"/>
+        <!-- sparse near estuary -->
+        <circle cx="510" cy="200" r="1.5" fill="#8bb8c8" opacity="0.5"/>
+        <circle cx="540" cy="192" r="1" fill="#8bb8c8" opacity="0.3"/>
+      </g>
+
+      <!-- Water / river floor -->
+      <path d="M 50 210 A 300 200 0 0 0 650 210 Z" fill="url(#waterGrad)" clip-path="url(#domeClip)"/>
+
+      <!-- River surface line -->
+      <line x1="50" y1="210" x2="650" y2="210" stroke="rgba(139,184,200,0.3)" stroke-width="1"/>
+
+      <!-- Active salmon — abundant years left, sparse right -->
+      <g filter="url(#glow)">
+        <!-- 1992 cohort near spawning grounds (left) -->
+        <g fill="#c04a2a" opacity="0.9">
+          <ellipse cx="130" cy="240" rx="9" ry="3.5" transform="rotate(-5 130 240)"/>
+          <ellipse cx="155" cy="250" rx="9" ry="3.5" transform="rotate(-3 155 250)"/>
+          <ellipse cx="145" cy="265" rx="9" ry="3.5" transform="rotate(-7 145 265)"/>
+          <ellipse cx="170" cy="255" rx="9" ry="3.5" transform="rotate(-4 170 255)"/>
+          <ellipse cx="120" cy="258" rx="9" ry="3.5" transform="rotate(-6 120 258)"/>
+          <ellipse cx="160" cy="275" rx="8" ry="3" transform="rotate(-3 160 275)"/>
+          <ellipse cx="185" cy="245" rx="8" ry="3" transform="rotate(-5 185 245)"/>
+          <ellipse cx="140" cy="282" rx="8" ry="3" transform="rotate(-4 140 282)"/>
+        </g>
+
+        <!-- 2003 cohort mid-river -->
+        <g fill="#8b4020" opacity="0.75">
+          <ellipse cx="310" cy="245" rx="9" ry="3.5" transform="rotate(-4 310 245)"/>
+          <ellipse cx="340" cy="258" rx="9" ry="3.5" transform="rotate(-6 340 258)"/>
+          <ellipse cx="360" cy="248" rx="9" ry="3.5" transform="rotate(-3 360 248)"/>
+          <ellipse cx="325" cy="270" rx="8" ry="3" transform="rotate(-5 325 270)"/>
+          <ellipse cx="355" cy="268" rx="8" ry="3" transform="rotate(-4 355 268)"/>
+        </g>
+
+        <!-- 2010 peak cohort — extra dense -->
+        <g fill="#c04a2a" opacity="0.85">
+          <ellipse cx="230" cy="242" rx="9" ry="3.5" transform="rotate(-5 230 242)"/>
+          <ellipse cx="255" cy="252" rx="9" ry="3.5" transform="rotate(-3 255 252)"/>
+          <ellipse cx="245" cy="265" rx="9" ry="3.5" transform="rotate(-6 245 265)"/>
+          <ellipse cx="270" cy="248" rx="9" ry="3.5" transform="rotate(-4 270 248)"/>
+          <ellipse cx="260" cy="270" rx="8" ry="3" transform="rotate(-5 260 270)"/>
+          <ellipse cx="235" cy="275" rx="8" ry="3" transform="rotate(-3 235 275)"/>
+          <ellipse cx="280" cy="260" rx="8" ry="3" transform="rotate(-4 280 260)"/>
+        </g>
+
+        <!-- 2019 cohort — very sparse, near estuary -->
+        <g fill="#6a8a96" opacity="0.6">
+          <ellipse cx="520" cy="248" rx="9" ry="3.5" transform="rotate(-4 520 248)"/>
+          <ellipse cx="550" cy="258" rx="9" ry="3.5" transform="rotate(-6 550 258)"/>
+        </g>
+
+        <!-- Silver ocean fish entering (rightmost) -->
+        <g fill="#8bb8c8" opacity="0.5">
+          <ellipse cx="600" cy="245" rx="9" ry="3.5" transform="rotate(-3 600 245)"/>
+          <ellipse cx="620" cy="258" rx="8" ry="3" transform="rotate(-5 620 258)"/>
+        </g>
+      </g>
+
+      <!-- Dentalium strand -->
+      <g opacity="0.45">
+        <path d="M 80 320 Q 200 310 350 318 Q 500 326 630 315" fill="none" stroke="#d4b896" stroke-width="1.2" stroke-dasharray="4 3"/>
+        <circle cx="120" cy="317" r="3" fill="#d4b896"/>
+        <circle cx="200" cy="312" r="3" fill="#d4b896"/>
+        <circle cx="280" cy="315" r="3" fill="#d4b896"/>
+        <circle cx="350" cy="318" r="3" fill="#d4b896"/>
+        <circle cx="420" cy="320" r="3" fill="#d4b896"/>
+        <circle cx="500" cy="318" r="3" fill="#d4b896"/>
+        <circle cx="580" cy="315" r="3" fill="#d4b896"/>
+      </g>
+
+      <!-- Dome floor arc -->
+      <path d="M 42 210 A 308 208 0 0 0 658 210" fill="none" stroke="rgba(240,236,228,0.08)" stroke-width="1"/>
+
+      <!-- Axis labels -->
+      <!-- Horizontal axis arrow -->
+      <line x1="80" y1="390" x2="620" y2="390" stroke="rgba(240,236,228,0.3)" stroke-width="1"/>
+      <polygon points="620,386 628,390 620,394" fill="rgba(240,236,228,0.3)"/>
+      <polygon points="80,386 72,390 80,394" fill="rgba(240,236,228,0.3)"/>
+      <text x="350" y="408" text-anchor="middle" font-family="'Inconsolata',monospace" font-size="10" fill="rgba(240,236,228,0.4)" letter-spacing="2">HORIZONTAL AXIS — TIME</text>
+      <text x="90" y="385" text-anchor="start" font-family="'Inconsolata',monospace" font-size="9" fill="rgba(139,184,200,0.6)">HEADWATERS / PAST</text>
+      <text x="610" y="385" text-anchor="end" font-family="'Inconsolata',monospace" font-size="9" fill="rgba(139,184,200,0.6)">ESTUARY / NOW</text>
+
+      <!-- Year markers -->
+      <text x="155" y="373" text-anchor="middle" font-family="'Inconsolata',monospace" font-size="9" fill="rgba(192,74,42,0.7)">1992</text>
+      <line x1="155" y1="375" x2="155" y2="382" stroke="rgba(192,74,42,0.5)" stroke-width="1"/>
+      <text x="255" y="373" text-anchor="middle" font-family="'Inconsolata',monospace" font-size="9" fill="rgba(192,74,42,0.7)">2010</text>
+      <line x1="255" y1="375" x2="255" y2="382" stroke="rgba(192,74,42,0.5)" stroke-width="1"/>
+      <text x="535" y="373" text-anchor="middle" font-family="'Inconsolata',monospace" font-size="9" fill="rgba(139,184,200,0.5)">2019</text>
+      <line x1="535" y1="375" x2="535" y2="382" stroke="rgba(139,184,200,0.3)" stroke-width="1"/>
+
+      <!-- Vertical axis arrow -->
+      <line x1="24" y1="340" x2="24" y2="80" stroke="rgba(240,236,228,0.3)" stroke-width="1"/>
+      <polygon points="20,80 24,72 28,80" fill="rgba(240,236,228,0.3)"/>
+      <text x="14" y="215" text-anchor="middle" font-family="'Inconsolata',monospace" font-size="9" fill="rgba(240,236,228,0.4)" letter-spacing="2" transform="rotate(-90 14 215)">VERTICAL AXIS — AFTERLIFE</text>
+
+      <!-- FLOOR label -->
+      <text x="350" y="350" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="11" fill="rgba(139,184,200,0.4)" font-style="italic">river — present tense — living fish</text>
+      <!-- CEILING label -->
+      <text x="230" y="100" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="11" fill="rgba(45,90,61,0.8)" font-style="italic">forest ceiling — accumulated past — ghost fish</text>
+
+      <!-- Viewer dot -->
+      <circle cx="350" cy="330" r="5" fill="var(--dentalium)" opacity="0.7"/>
+      <text x="350" y="345" text-anchor="middle" font-family="'Inconsolata',monospace" font-size="9" fill="rgba(212,184,150,0.6)">viewer</text>
+
+    </svg>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="card">
+      <h3>Two Axes</h3>
+      <div class="axis-row">
+        <div class="axis-icon horiz">→</div>
+        <div class="axis-text">
+          <h4>Horizontal — Time</h4>
+          <p>Headwaters = 1986 (past, abundance). Estuary = present (sparse, arriving). Walking upstream is walking into memory.</p>
+        </div>
+      </div>
+      <div class="axis-row">
+        <div class="axis-icon vert">↑</div>
+        <div class="axis-text">
+          <h4>Vertical — Afterlife</h4>
+          <p>Floor = river = living fish. Ceiling = forest = dissolved ancestors. Years of completed runs accumulate above as ghost canopy.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Color by lifecycle stage</h3>
+      <ul>
+        <li><span style="color:#8bb8c8">■</span> Ocean silver — entering from estuary</li>
+        <li><span style="color:#8b6840">■</span> River copper — mid-journey</li>
+        <li><span style="color:#c04a2a">■</span> Spawning red — near headwaters</li>
+        <li><span style="color:rgba(140,200,180,0.6)">■</span> Ghost — dissolved, rising</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Abundance → density</h3>
+      <p>Each year's spawner count (ODFW data, 1986–2026) drives boid population. 1992: ~18,000. 2010: ~32,000. 2019: <strong style="color:#c04a2a">275</strong>. The viewer feels the difference as space.</p>
+    </div>
+
+    <div class="card">
+      <h3>Dentalium strand</h3>
+      <p style="font-size:0.9rem; color:var(--dim)">A relational thread running the river's length — offered to the water, absorbed into the anatomy of the river. Present across all years.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- YEAR EXPLORER -->
+<div class="year-section">
+  <h2>Spawner abundance — Coquille Basin Fall Chinook</h2>
+  <div class="timeline">
+    <div class="timeline-track"></div>
+    <div class="timeline-bars" id="bars"></div>
+  </div>
+  <div class="year-info">
+    <div class="year-display" id="yearDisplay">1986</div>
+    <div class="count-display">
+      spawners<br>
+      <span id="countDisplay">5,361</span>
+    </div>
+    <div class="note-display" id="noteDisplay"></div>
+  </div>
+</div>
+
+<!-- SPATIAL NOTES -->
+<div class="spatial-section">
+  <div class="spatial-note">
+    <h4>The viewer's movement</h4>
+    <p>Walking toward the headwaters is walking toward abundance, toward the ancestral density, toward a ceiling thick with what was. Walking back is walking toward now.</p>
+  </div>
+  <div class="spatial-note">
+    <h4>The dome geometry</h4>
+    <p>Floor = river = present tense of each run. Ceiling = forest = accumulated past. The vertical axis is the afterlife axis. The horizontal axis is the time axis.</p>
+  </div>
+  <div class="spatial-note">
+    <h4>The argument without words</h4>
+    <p>Near the estuary, 2018–2022: thin water, bare ceiling. The emptiness is not absence — it is the shape of what has not yet returned to give itself.</p>
+  </div>
+</div>
+
+<div class="quote-block">
+  <blockquote>
+    "Once you could walk across the Coquille river on the backs of the salmon."
+    <cite>— Annette Samberg (KōKwel / Coquille)</cite>
+  </blockquote>
+</div>
+
+<script>
+  const data = [
+    {year:1986,count:5361}, {year:1987,count:7071}, {year:1988,count:7772},
+    {year:1989,count:7795}, {year:1990,count:9708}, {year:1991,count:9503},
+    {year:1992,count:18267},{year:1993,count:9093}, {year:1994,count:6220},
+    {year:1995,count:14845},{year:1996,count:8492}, {year:1997,count:8219},
+    {year:1998,count:9854}, {year:1999,count:11161},{year:2000,count:7913},
+    {year:2001,count:12512},{year:2002,count:13675},{year:2003,count:18876},
+    {year:2004,count:11514},{year:2005,count:4973}, {year:2006,count:7471},
+    {year:2007,count:3505}, {year:2008,count:5981}, {year:2009,count:15526},
+    {year:2010,count:32071},{year:2011,count:14124},{year:2012,count:8117},
+    {year:2013,count:5358}, {year:2014,count:12586},{year:2015,count:14669},
+    {year:2016,count:9720}, {year:2017,count:6470}, {year:2018,count:498},
+    {year:2019,count:275},  {year:2020,count:879},  {year:2021,count:371},
+    {year:2022,count:908}
+  ];
+
+  const notes = {
+    1992: "Peak of early abundance era",
+    2003: "Last high-count year before mid-decade dip",
+    2010: "All-time peak in dataset — 32,071 spawners",
+    2018: "Catastrophic collapse begins — 498 fish",
+    2019: "Lowest recorded year — 275 spawners",
+    2021: "Near-zero: 371 spawners"
+  };
+
+  const maxCount = Math.max(...data.map(d => d.count));
+  const barsEl = document.getElementById('bars');
+  const yearEl = document.getElementById('yearDisplay');
+  const countEl = document.getElementById('countDisplay');
+  const noteEl = document.getElementById('noteDisplay');
+
+  data.forEach((d, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    const pct = (d.count / maxCount) * 100;
+    bar.style.height = Math.max(pct, 2) + '%';
+    if (d.count < 1000) bar.classList.add('collapse');
+    bar.title = `${d.year}: ${d.count.toLocaleString()}`;
+    bar.addEventListener('mouseenter', () => {
+      document.querySelectorAll('.bar').forEach(b => b.classList.remove('active'));
+      bar.classList.add('active');
+      yearEl.textContent = d.year;
+      countEl.textContent = d.count.toLocaleString();
+      noteEl.textContent = notes[d.year] || '';
+    });
+    barsEl.appendChild(bar);
+  });
+</script>
+
+</body>
+</html>

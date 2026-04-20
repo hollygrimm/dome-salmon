@@ -25,6 +25,19 @@ extends MultiMeshInstance3D
 @export var fish_scale:          float = 25.0          # scale each fish instance — adjust for GLB models
 @export var fish_rotation_offset: Vector3 = Vector3(0, -90, -60) # degrees — fix mesh orientation (try Y: 90, -90, 180)
 
+# --- Student contribution wiring (Week 15 residency) ---
+# Each CSAT201 student contributes one file under scripts/contributions/.
+# Uncomment each hook as its PR lands. If a contribution doesn't arrive in
+# time, leave the hook commented — the school runs fine without it.
+#
+# See docs/CONTRIBUTING.md and scripts/contributions/{name}/README.md.
+@export var enable_ticoh_schooling: bool = false   # SchoolingBehavior modulator
+@export var enable_jacob_mode: bool = false        # BehaviorMode state machine
+@export var enable_shawn_flee: bool = false        # FleeBehavior per-fish force
+## Threats for Shawn's flee behavior (rocks, boats, disturbance zones).
+## Main.gd maintains this list; can be empty.
+var threats: Array = []
+
 # --- River current coupling (set by Main.gd at runtime) ---
 ## RiverCurrent node providing flow-field samples. Optional — boids fall
 ## back to pure upstream bias when null.
@@ -150,6 +163,7 @@ func _update_boids(delta: float) -> void:
 	for i in fish_count:
 		var pos := _positions[i]
 		var vel := _velocities[i]
+		var mode_speed_scale := 1.0  # updated below if Jacob's mode is enabled
 
 		var sep_force   := Vector3.ZERO
 		var align_force := Vector3.ZERO
@@ -177,11 +191,34 @@ func _update_boids(delta: float) -> void:
 			coh_center   = coh_center / neighbor_count
 			var to_center := (coh_center - pos).normalized()
 			steering += align_force * weight_alignment
-			steering += to_center  * cohesion_w
+
+			# Ticoh's contribution: per-fish cohesion weight modulator.
+			# See scripts/contributions/ticoh/SchoolingBehavior.gd
+			var ticoh_mod := 1.0
+			if enable_ticoh_schooling:
+				ticoh_mod = SchoolingBehavior.cohesion_weight(i, _phases[i], delta)
+			steering += to_center * cohesion_w * ticoh_mod
 
 		# Upstream bias — accumulated separately so pool-holding can dampen
 		# *only* this component without nuking separation/cohesion forces.
 		var upstream_bias := upstream_direction * up_force * weight_upstream
+
+		# Jacob's contribution: per-fish behavior mode (WANDER ↔ SEEK_UPSTREAM).
+		# See scripts/contributions/jacob/BehaviorMode.gd
+		if enable_jacob_mode:
+			var river_progress: float = clamp(
+				(spawn_center_z + spawn_volume.z * 0.5 - pos.z) / spawn_volume.z,
+				0.0, 1.0)
+			var elapsed: float = Time.get_ticks_msec() * 0.001
+			var mode: int = BehaviorMode.mode_for(i, river_progress, elapsed)
+			var scale: Dictionary = BehaviorMode.force_scale(mode)
+			upstream_bias *= scale.get("upstream", 1.0)
+			mode_speed_scale = scale.get("speed", 1.0)
+
+		# Shawn's contribution: flee force when threats are nearby.
+		# See scripts/contributions/shawn/FleeBehavior.gd
+		if enable_shawn_flee and not threats.is_empty():
+			steering += FleeBehavior.flee_force(pos, threats)
 
 		# River current — flow field drift, Kármán gait, pool resting
 		if river_current != null:
@@ -223,9 +260,10 @@ func _update_boids(delta: float) -> void:
 		# Integrate
 		vel = vel.lerp(vel + steering * delta, 0.15)
 
-		# Clamp to max speed
-		if vel.length() > speed:
-			vel = vel.normalized() * speed
+		# Clamp to max speed (scaled by Jacob's per-fish mode if enabled)
+		var effective_speed: float = speed * mode_speed_scale
+		if vel.length() > effective_speed:
+			vel = vel.normalized() * effective_speed
 
 		pos += vel * delta
 
