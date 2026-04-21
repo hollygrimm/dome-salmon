@@ -111,8 +111,7 @@ func _build_dome_camera() -> void:
 
 	dome_camera = DomeCamera.new()
 	dome_camera.name = "DomeCamera"
-	dome_camera.camera_mode = DomeCamera.CameraMode.DRONE
-	dome_camera.height_offset = 2.5         # lower = more "flying along" feel
+	dome_camera.camera_mode = DomeCamera.CameraMode.UNDERWATER
 	dome_camera.look_ahead_distance = 14.0  # look further down the river
 	dome_camera.travel_speed = 0.015        # ~0.9 m/s, slower than fish so they catch up
 	follow.add_child(dome_camera)

@@ -28,7 +28,7 @@ enum CameraMode {
 	SALMON_POV  ## Soft lock-on to the salmon flock centroid
 }
 
-@export var camera_mode: CameraMode = CameraMode.DRONE
+@export var camera_mode: CameraMode = CameraMode.UNDERWATER
 
 ## Travel speed along the path (0 = stationary, 1 = full path per second)
 @export_range(0.0, 0.5, 0.001) var travel_speed: float = 0.012
@@ -149,6 +149,7 @@ func _look_ahead_point() -> Vector3:
 
 
 ## Apply sensible height defaults per mode so first run looks reasonable.
+## Assumes the Path3D sits at y=0 (riverbed "spine"), water surface at y≈1.8.
 func _apply_mode_defaults() -> void:
 	match camera_mode:
 		CameraMode.DRONE:
@@ -156,7 +157,7 @@ func _apply_mode_defaults() -> void:
 				height_offset = 5.0
 		CameraMode.UNDERWATER:
 			if height_offset == 3.5:
-				height_offset = -1.2   # just below water plane
+				height_offset = -1.0   # low in the channel, looking up at the school
 		CameraMode.SALMON_POV:
 			if height_offset == 3.5:
 				height_offset = 0.3    # roughly at salmon swimming depth
