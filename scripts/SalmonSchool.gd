@@ -54,7 +54,8 @@ var river_current: RiverCurrent = null
 # --- Internal state ---
 var _positions: PackedVector3Array
 var _velocities: PackedVector3Array
-var _phases: PackedFloat32Array   # per-fish undulation phase offset
+var _phases: PackedFloat32Array      # per-fish undulation phase offset
+var _flee_states: PackedByteArray    # per-fish hysteresis flag for FleeBehavior
 
 
 func _ready() -> void:
@@ -122,9 +123,10 @@ func _find_mesh_instance(node: Node) -> MeshInstance3D:
 
 
 func _spawn_fish() -> void:
-	_positions  = PackedVector3Array()
-	_velocities = PackedVector3Array()
-	_phases     = PackedFloat32Array()
+	_positions   = PackedVector3Array()
+	_velocities  = PackedVector3Array()
+	_phases      = PackedFloat32Array()
+	_flee_states = PackedByteArray()
 
 	for i in fish_count:
 		var pos := Vector3(
@@ -142,6 +144,7 @@ func _spawn_fish() -> void:
 			randf_range(-0.3, 0.3)
 		))
 		_phases.append(randf() * TAU)
+		_flee_states.append(0)
 
 
 func _process(delta: float) -> void:
@@ -218,7 +221,19 @@ func _update_boids(delta: float) -> void:
 		# Shawn's contribution: flee force when threats are nearby.
 		# See scripts/contributions/shawn/FleeBehavior.gd
 		if enable_shawn_flee and not threats.is_empty():
-			steering += FleeBehavior.flee_force(pos, threats)
+			var fleeing := bool(_flee_states[i])
+			# Update hysteresis state before passing to flee_force
+			var nearest_threat_dist := INF
+			for t in threats:
+				nearest_threat_dist = minf(nearest_threat_dist, pos.distance_to(t))
+			if fleeing:
+				if nearest_threat_dist > FleeBehavior.FLEE_RADIUS * FleeBehavior.FLEE_STOP_MULTIPLIER:
+					fleeing = false
+			else:
+				if nearest_threat_dist < FleeBehavior.FLEE_RADIUS:
+					fleeing = true
+			_flee_states[i] = int(fleeing)
+			steering += FleeBehavior.flee_force(pos, threats, fleeing)
 
 		# River current — flow field drift, Kármán gait, pool resting
 		if river_current != null:
