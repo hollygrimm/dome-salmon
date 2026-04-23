@@ -39,15 +39,9 @@
 
 class_name SchoolingBehavior
 
-
-## Replace this stub with your logic. Default returns 1.0 (neutral).
 static func cohesion_weight(fish_index: int, phase: float, delta: float) -> float:
-	# TODO (Ticoh): implement your cohesion modulator here.
-	#
-	# Example sketch — feel free to change the values and math:
-	#   var cohesion_value := 0.6  # eventually read from a cultural source
-	#   return lerp(0.8, 1.6, clamp(cohesion_value, 0.0, 1.0))
-	#
+	var cohesion_value := 0.6  # eventually read from a cultural source
+	return lerp(0.8, 1.6, clamp(cohesion_value, 0.0, 1.0))
+	
 	# Optional: use `phase` to add subtle per-fish variation so not every
 	# fish responds identically (your original fish.gd used phase for this).
-	return 1.0
