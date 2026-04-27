@@ -68,32 +68,24 @@ const FLEE_RADIUS: float = 6.0
 ## Hysteresis multiplier: fleeing stops only when distance exceeds this × FLEE_RADIUS
 const FLEE_STOP_MULTIPLIER: float = 1.4
 
-
-## Replace this stub with your flee logic.
-## Default returns Vector3.ZERO (no flee force, school ignores threats).
 static func flee_force(fish_position: Vector3, threats: Array, is_fleeing: bool) -> Vector3:
-	# TODO (Shawn): implement the flee force here.
-	#
-	# Example sketch — adapt distance thresholds and magnitudes.
-	# Note the hysteresis: use is_fleeing to decide which threshold to test.
-	#
-	#   if threats.is_empty():
-	#     return Vector3.ZERO
-	#
-	#   var nearest: Vector3 = threats[0]
-	#   var nearest_dist := fish_position.distance_to(nearest)
-	#   for t in threats:
-	#     var d := fish_position.distance_to(t)
-	#     if d < nearest_dist:
-	#       nearest = t
-	#       nearest_dist = d
-	#
-	#   var stop_radius := FLEE_RADIUS * FLEE_STOP_MULTIPLIER
-	#   var threshold := stop_radius if is_fleeing else FLEE_RADIUS
-	#   if nearest_dist > threshold:
-	#     return Vector3.ZERO
-	#
-	#   var away := (fish_position - nearest).normalized()
-	#   var urgency := 1.0 - (nearest_dist / FLEE_RADIUS)  # 0..1
-	#   return away * clamp(urgency, 0.0, 1.0) * MAX_FORCE
-	return Vector3.ZERO
+
+	if threats.is_empty():
+		return Vector3.ZERO
+
+	var nearest: Vector3 = threats[0]
+	var nearest_dist := fish_position.distance_to(nearest)
+	for t in threats:
+		var d := fish_position.distance_to(t)
+		if d < nearest_dist:
+			nearest = t
+			nearest_dist = d
+
+	var stop_radius := FLEE_RADIUS * FLEE_STOP_MULTIPLIER
+	var threshold := stop_radius if is_fleeing else FLEE_RADIUS
+	if nearest_dist > threshold:
+		return Vector3.ZERO
+
+	var away := (fish_position - nearest).normalized()
+	var urgency := 1.0 - (nearest_dist / FLEE_RADIUS)  # 0..1
+	return away * clamp(urgency, 0.0, 1.0) * MAX_FORCE
