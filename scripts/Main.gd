@@ -126,8 +126,11 @@ func _build_dome_camera() -> void:
 	dome_camera.name = "DomeCamera"
 	dome_camera.camera_mode = DomeCamera.CameraMode.UNDERWATER
 	dome_camera.look_ahead_distance = 14.0  # look further down the river
-	dome_camera.travel_speed = 0.015        # ~0.9 m/s, slower than fish so they catch up
+	dome_camera.loop_path = false           # hold at soft end instead of wrapping
 	follow.add_child(dome_camera)
+	# Align the camera arc with the salmon-cycle ramp so we arrive at the
+	# headwaters as the school finishes spawning. Sets travel_speed internally.
+	dome_camera.set_arc_duration(salmon_school.run_duration_sec)
 	dome_camera.make_current()
 
 	# Retire the original static camera from the scene

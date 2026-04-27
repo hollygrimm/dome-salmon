@@ -65,6 +65,12 @@ var _target_basis: Basis
 var _current_basis: Basis
 var _paused: bool = false
 
+## Soft end-of-path. Beyond this ratio, look-ahead clamping at curve end
+## causes the camera to point straight up (look_target collapses onto the
+## camera's own position + the mode's UP offset). Computed in _ready() from
+## look_ahead_distance / curve length plus a small safety margin.
+var _max_progress: float = 1.0
+
 ## ── Lifecycle ───────────────────────────────────────────────────────────────
 
 func _ready() -> void:
@@ -74,8 +80,22 @@ func _ready() -> void:
 		return
 
 	_apply_mode_defaults()
+	_compute_max_progress()
 	_current_basis = global_transform.basis
 	_target_basis = _current_basis
+
+
+## Compute the soft end-of-path so look-ahead always has real path ahead
+## of it (avoids the camera-points-up bug at the curve endpoint).
+func _compute_max_progress() -> void:
+	var path: Path3D = _path_follow.get_parent() as Path3D
+	if path == null or path.curve == null:
+		return
+	var curve_length: float = path.curve.get_baked_length()
+	if curve_length <= 0.0:
+		return
+	# 0.02 is a tiny safety margin so we never quite touch the clamp boundary.
+	_max_progress = clampf(1.0 - look_ahead_distance / curve_length - 0.02, 0.0, 1.0)
 
 
 func _process(delta: float) -> void:
@@ -91,8 +111,11 @@ func _process(delta: float) -> void:
 
 	if not _paused:
 		_path_follow.progress_ratio += travel_speed * delta
-		if loop_path and _path_follow.progress_ratio >= 1.0:
-			_path_follow.progress_ratio = 0.0
+		if _path_follow.progress_ratio >= _max_progress:
+			if loop_path:
+				_path_follow.progress_ratio = 0.0
+			else:
+				_path_follow.progress_ratio = _max_progress  # hold at soft end
 
 	# ── 2. Position offset (height + forward) ────────────────────────────────
 	# PathFollow3D handles the path-tangent orientation; we shift in local space.
@@ -169,6 +192,15 @@ func _apply_mode_defaults() -> void:
 func set_mode(mode: CameraMode) -> void:
 	camera_mode = mode
 	_apply_mode_defaults()
+
+
+## Configure travel_speed so the camera reaches the soft-end-of-path at
+## the given duration. Lets the camera arc be aligned with a narrative
+## timeline (e.g., the salmon-cycle ramp).
+func set_arc_duration(duration_sec: float) -> void:
+	if duration_sec <= 0.0:
+		return
+	travel_speed = _max_progress / duration_sec
 
 
 ## Teleport to a specific point on the path (0.0 – 1.0).

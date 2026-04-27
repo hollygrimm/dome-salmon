@@ -51,11 +51,17 @@ var river_current: RiverCurrent = null
 ## Only the upstream component is dampened — separation/cohesion are preserved.
 @export_range(0.0, 1.0, 0.05) var pool_rest_factor: float = 0.85
 
+# --- Cycle color ramp (Salmon Afterlives) ---
+## How long the spawning-color cycle takes to fully ramp from 0 → 1.
+## After this duration, spawn_color_amount holds at 1.0 (no loop, no fade).
+@export var run_duration_sec: float = 180.0
+
 # --- Internal state ---
 var _positions: PackedVector3Array
 var _velocities: PackedVector3Array
 var _phases: PackedFloat32Array      # per-fish undulation phase offset
 var _flee_states: PackedByteArray    # per-fish hysteresis flag for FleeBehavior
+var _salmon_mat: ShaderMaterial      # held so cycle ramp can update it each frame
 
 
 func _ready() -> void:
@@ -72,17 +78,20 @@ func _init_multimesh() -> void:
 	# Try to load salmon.glb — fall back to capsule if not present
 	var mesh: Mesh = _load_fish_mesh()
 
-	# Apply salmon body shader
-	var mat := ShaderMaterial.new()
-	mat.shader = load("res://shaders/salmon_body.gdshader")
-	mat.set_shader_parameter("base_color", Color(0.72, 0.58, 0.52, 1.0))
-	mat.set_shader_parameter("belly_color", Color(0.88, 0.82, 0.76, 1.0))
-	mat.set_shader_parameter("spawn_color", Color(0.78, 0.18, 0.12, 1.0))
-	mat.set_shader_parameter("undulation_speed", 3.5)
-	mat.set_shader_parameter("undulation_amplitude", 0.06)
-	mat.set_shader_parameter("wave_frequency", 1.5)
+	# Apply salmon body shader (held at member scope so the cycle ramp can
+	# update spawn_color_amount each frame).
+	_salmon_mat = ShaderMaterial.new()
+	_salmon_mat.shader = load("res://shaders/salmon_body.gdshader")
+	_salmon_mat.set_shader_parameter("base_color", Color(0.72, 0.58, 0.52, 1.0))
+	_salmon_mat.set_shader_parameter("belly_color", Color(0.88, 0.82, 0.76, 1.0))
+	_salmon_mat.set_shader_parameter("spawn_color", Color(0.78, 0.18, 0.12, 1.0))
+	_salmon_mat.set_shader_parameter("spawn_color_amount", 0.0)
+	_salmon_mat.set_shader_parameter("body_alpha", 1.0)  # ramped 1.0 → 0.6 by _update_cycle
+	_salmon_mat.set_shader_parameter("undulation_speed", 3.5)
+	_salmon_mat.set_shader_parameter("undulation_amplitude", 0.06)
+	_salmon_mat.set_shader_parameter("wave_frequency", 1.5)
 	for s in mesh.get_surface_count():
-		mesh.surface_set_material(s, mat)
+		mesh.surface_set_material(s, _salmon_mat)
 
 	mm.mesh = mesh
 	multimesh = mm
@@ -148,8 +157,24 @@ func _spawn_fish() -> void:
 
 
 func _process(delta: float) -> void:
+	_update_cycle()
 	_update_boids(delta)
 	_write_transforms()
+
+
+## Drive spawn_color_amount + body_alpha from a wall-clock ramp over
+## run_duration_sec. See docs/specs/2026-04-27-cycle-color-ramp-design.md.
+##
+## body_alpha ramps 1.0 (solid, fresh from ocean) → 0.6 (translucent,
+## spawning/spirit). Stays above the depth_prepass_alpha threshold so the
+## salmon keep casting shadows across the whole cycle.
+func _update_cycle() -> void:
+	if _salmon_mat == null:
+		return
+	var elapsed := Time.get_ticks_msec() * 0.001
+	var cycle_amount := clampf(elapsed / run_duration_sec, 0.0, 1.0)
+	_salmon_mat.set_shader_parameter("spawn_color_amount", cycle_amount)
+	_salmon_mat.set_shader_parameter("body_alpha", lerpf(1.0, 0.6, cycle_amount))
 
 
 func _update_boids(delta: float) -> void:
