@@ -33,7 +33,7 @@ extends MultiMeshInstance3D
 # See docs/CONTRIBUTING.md and scripts/contributions/{name}/README.md.
 @export var enable_ticoh_schooling: bool = false   # SchoolingBehavior modulator
 @export var enable_jacob_mode: bool = false        # BehaviorMode state machine
-@export var enable_shawn_flee: bool = false        # FleeBehavior per-fish force
+@export var enable_shawn_flee: bool = true         # FleeBehavior per-fish force
 ## Threats for Shawn's flee behavior (rocks, boats, disturbance zones).
 ## Main.gd maintains this list; can be empty.
 var threats: Array = []
