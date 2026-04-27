@@ -110,7 +110,7 @@ func _build_player_fish() -> void:
 	player_fish = PlayerFish.new()
 	player_fish.name = "PlayerFish"
 	# Spawn downstream-end of the school volume, mid-water depth.
-	player_fish.global_position = Vector3(0.0, 0.5, 20.0)
+	player_fish.global_position = Vector3(0.0, -1.4, 20.0)
 	add_child(player_fish)
 
 

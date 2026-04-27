@@ -42,6 +42,8 @@ extends Node3D
 @export var swim_speed: float = 4.0
 @export var turn_smoothing: float = 0.15
 @export var salmon_glb_path: String = "res://assets/salmon.glb"
+@export var fish_scale: float = 25.0  # match SalmonSchool.fish_scale
+@export var mesh_rotation_offset: Vector3 = Vector3(0, -90, 0)  # GLB nose alignment
 
 var velocity: Vector3 = Vector3.ZERO
 var _mesh_instance: Node3D
@@ -76,6 +78,8 @@ func _load_mesh() -> void:
 	if scene:
 		_mesh_instance = scene.instantiate()
 		add_child(_mesh_instance)
+		_mesh_instance.scale = Vector3.ONE * fish_scale
+		_mesh_instance.rotation_degrees = mesh_rotation_offset
 		return
 
 	# Fallback placeholder
@@ -88,5 +92,6 @@ func _load_mesh() -> void:
 	mat.albedo_color = Color(0.861, 0.286, 0.369, 1.0)  # distinguish from school
 	mi.set_surface_override_material(0, mat)
 	add_child(mi)
+	mi.scale = Vector3.ONE * fish_scale
 	_mesh_instance = mi
 	push_warning("[PlayerFish] salmon.glb not found — using capsule placeholder.")
