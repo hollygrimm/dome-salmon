@@ -62,19 +62,11 @@ func _physics_process(delta: float) -> void:
 		look_at(target, Vector3.UP)
 
 
-## Replace this stub with your input reading.
-## Default returns Vector3.ZERO (fish does not move).
 func _read_input() -> Vector3:
-	# TODO (Keanu): implement WASD + up/down input here.
-	#
-	# Your sp26-csat201-godot-KeanuBegay/Script/PlayerFish.gd already has
-	# the pattern — reuse it here. Sketch:
-	#
-	#   var planar := Input.get_vector(
-	#       "move_left", "move_right", "move_forward", "move_back")
-	#   var vertical := Input.get_axis("move_down", "move_up")
-	#   return Vector3(planar.x, vertical, planar.y) * swim_speed
-	return Vector3.ZERO
+	var planar := Input.get_vector(
+	"move_left", "move_right", "move_forward", "move_back")
+	var vertical := Input.get_axis("move_down", "move_up")
+	return Vector3(planar.x, -vertical, planar.y) * swim_speed
 
 
 func _load_mesh() -> void:
@@ -93,7 +85,7 @@ func _load_mesh() -> void:
 	capsule.height = 0.8
 	mi.mesh = capsule
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.95, 0.35, 0.25)  # distinguish from school
+	mat.albedo_color = Color(0.861, 0.286, 0.369, 1.0)  # distinguish from school
 	mi.set_surface_override_material(0, mat)
 	add_child(mi)
 	_mesh_instance = mi
