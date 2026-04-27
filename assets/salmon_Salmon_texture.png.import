@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cg7vsal3nb8q0"
-path.s3tc="res://.godot/imported/salmon_medaka fish_D.jpg-eaf20cdeb1b0c840191056a65d01e854.s3tc.ctex"
+uid="uid://cp028y1scr6nv"
+path.s3tc="res://.godot/imported/salmon_Salmon_texture.png-c3d9d6c708eeebd08899386e95e27b97.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "4cb30ad582d3aa821e748f5773e24a2b"
+"md5": "d42c5e99f707f902d0bdc64d0c2ecffb"
 }
 
 [deps]
 
-source_file="res://assets/salmon_medaka fish_D.jpg"
-dest_files=["res://.godot/imported/salmon_medaka fish_D.jpg-eaf20cdeb1b0c840191056a65d01e854.s3tc.ctex"]
+source_file="res://assets/salmon_Salmon_texture.png"
+dest_files=["res://.godot/imported/salmon_Salmon_texture.png-c3d9d6c708eeebd08899386e95e27b97.s3tc.ctex"]
 
 [params]
 

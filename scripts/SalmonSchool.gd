@@ -22,8 +22,8 @@ extends MultiMeshInstance3D
 @export var weight_alignment:  float = 1.0
 @export var weight_cohesion:   float = 0.8
 @export var weight_upstream:   float = 1.2
-@export var fish_scale:          float = 25.0          # scale each fish instance — adjust for GLB models
-@export var fish_rotation_offset: Vector3 = Vector3(0, -90, -60) # degrees — fix mesh orientation (try Y: 90, -90, 180)
+@export var fish_scale:          float = 0.25          # scale each fish instance — adjust for GLB models
+@export var fish_rotation_offset: Vector3 = Vector3(0, 180, 0)  # degrees — LowPolySalmonv2 raw-mesh axis fix: Z180 rolls belly down, X90 lays nose forward
 
 # --- Student contribution wiring (Week 15 residency) ---
 # Each CSAT201 student contributes one file under scripts/contributions/.
@@ -308,9 +308,14 @@ func _write_transforms() -> void:
 		var vel := _velocities[i]
 		if vel.length_squared() < 0.0001:
 			continue
-		# Orient fish along velocity, apply scale and mesh rotation correction
+		# Orient fish along the horizontal projection of velocity, so accumulated
+		# Y-velocity from gravity doesn't constantly pitch the school nose-down.
+		# Apply scale and mesh rotation correction.
 		var correction := Basis.from_euler(fish_rotation_offset * (PI / 180.0))
-		var fish_basis := Basis.looking_at(vel.normalized(), Vector3.UP) * correction
+		var horiz := Vector3(vel.x, 0.0, vel.z)
+		if horiz.length_squared() < 0.0001:
+			horiz = upstream_direction
+		var fish_basis := Basis.looking_at(horiz.normalized(), Vector3.UP) * correction
 		fish_basis = fish_basis.scaled(Vector3(fish_scale, fish_scale, fish_scale))
 		var t := Transform3D(fish_basis, _positions[i])
 		multimesh.set_instance_transform(i, t)

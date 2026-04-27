@@ -42,8 +42,8 @@ extends Node3D
 @export var swim_speed: float = 4.0
 @export var turn_smoothing: float = 0.15
 @export var salmon_glb_path: String = "res://assets/salmon.glb"
-@export var fish_scale: float = 25.0  # match SalmonSchool.fish_scale
-@export var mesh_rotation_offset: Vector3 = Vector3(0, -90, 0)  # GLB nose alignment
+@export var fish_scale: float = 0.25  # match SalmonSchool.fish_scale
+@export var mesh_rotation_offset: Vector3 = Vector3(0, 180, 0)  # GLB nose alignment
 
 var velocity: Vector3 = Vector3.ZERO
 var _mesh_instance: Node3D
