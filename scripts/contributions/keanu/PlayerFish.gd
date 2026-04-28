@@ -39,7 +39,7 @@
 class_name PlayerFish
 extends Node3D
 
-@export var swim_speed: float = 4.0
+@export var swim_speed: float = 2.0
 @export var turn_smoothing: float = 0.15
 @export var salmon_glb_path: String = "res://assets/salmon.glb"
 @export var fish_scale: float = 0.25  # match SalmonSchool.fish_scale
@@ -60,8 +60,10 @@ func _physics_process(delta: float) -> void:
 	# Face the direction of travel. Guard against zero-length to avoid
 	# look_at errors when the fish is idle.
 	if velocity.length() > 0.01:
-		var target := global_position + velocity
-		look_at(target, Vector3.UP)
+		var horiz := Vector3(velocity.x, 0, velocity.z).length()
+		if horiz > 0.01:
+			var target := global_position + velocity
+			look_at(target, Vector3.UP)
 
 
 func _read_input() -> Vector3:
