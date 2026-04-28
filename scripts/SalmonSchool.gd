@@ -22,8 +22,8 @@ extends MultiMeshInstance3D
 @export var weight_alignment:  float = 1.0
 @export var weight_cohesion:   float = 0.8
 @export var weight_upstream:   float = 1.2
-@export var fish_scale:          float = 25.0          # scale each fish instance — adjust for GLB models
-@export var fish_rotation_offset: Vector3 = Vector3(0, -90, -60) # degrees — fix mesh orientation (try Y: 90, -90, 180)
+@export var fish_scale:          float = 0.25          # scale each fish instance — adjust for GLB models
+@export var fish_rotation_offset: Vector3 = Vector3(0, 180, 0)  # degrees — LowPolySalmonv2 raw-mesh axis fix: Z180 rolls belly down, X90 lays nose forward
 
 # --- Student contribution wiring (Week 15 residency) ---
 # Each CSAT201 student contributes one file under scripts/contributions/.
@@ -33,7 +33,7 @@ extends MultiMeshInstance3D
 # See docs/CONTRIBUTING.md and scripts/contributions/{name}/README.md.
 @export var enable_ticoh_schooling: bool = false   # SchoolingBehavior modulator
 @export var enable_jacob_mode: bool = false        # BehaviorMode state machine
-@export var enable_shawn_flee: bool = false        # FleeBehavior per-fish force
+@export var enable_shawn_flee: bool = true         # FleeBehavior per-fish force
 ## Threats for Shawn's flee behavior (rocks, boats, disturbance zones).
 ## Main.gd maintains this list; can be empty.
 var threats: Array = []
@@ -51,10 +51,17 @@ var river_current: RiverCurrent = null
 ## Only the upstream component is dampened — separation/cohesion are preserved.
 @export_range(0.0, 1.0, 0.05) var pool_rest_factor: float = 0.85
 
+# --- Cycle color ramp (Salmon Afterlives) ---
+## How long the spawning-color cycle takes to fully ramp from 0 → 1.
+## After this duration, spawn_color_amount holds at 1.0 (no loop, no fade).
+@export var run_duration_sec: float = 180.0
+
 # --- Internal state ---
 var _positions: PackedVector3Array
 var _velocities: PackedVector3Array
-var _phases: PackedFloat32Array   # per-fish undulation phase offset
+var _phases: PackedFloat32Array      # per-fish undulation phase offset
+var _flee_states: PackedByteArray    # per-fish hysteresis flag for FleeBehavior
+var _salmon_mat: ShaderMaterial      # held so cycle ramp can update it each frame
 
 
 func _ready() -> void:
@@ -71,17 +78,20 @@ func _init_multimesh() -> void:
 	# Try to load salmon.glb — fall back to capsule if not present
 	var mesh: Mesh = _load_fish_mesh()
 
-	# Apply salmon body shader
-	var mat := ShaderMaterial.new()
-	mat.shader = load("res://shaders/salmon_body.gdshader")
-	mat.set_shader_parameter("base_color", Color(0.72, 0.58, 0.52, 1.0))
-	mat.set_shader_parameter("belly_color", Color(0.88, 0.82, 0.76, 1.0))
-	mat.set_shader_parameter("spawn_color", Color(0.78, 0.18, 0.12, 1.0))
-	mat.set_shader_parameter("undulation_speed", 3.5)
-	mat.set_shader_parameter("undulation_amplitude", 0.06)
-	mat.set_shader_parameter("wave_frequency", 1.5)
+	# Apply salmon body shader (held at member scope so the cycle ramp can
+	# update spawn_color_amount each frame).
+	_salmon_mat = ShaderMaterial.new()
+	_salmon_mat.shader = load("res://shaders/salmon_body.gdshader")
+	_salmon_mat.set_shader_parameter("base_color", Color(0.72, 0.58, 0.52, 1.0))
+	_salmon_mat.set_shader_parameter("belly_color", Color(0.88, 0.82, 0.76, 1.0))
+	_salmon_mat.set_shader_parameter("spawn_color", Color(0.78, 0.18, 0.12, 1.0))
+	_salmon_mat.set_shader_parameter("spawn_color_amount", 0.0)
+	_salmon_mat.set_shader_parameter("body_alpha", 1.0)  # ramped 1.0 → 0.6 by _update_cycle
+	_salmon_mat.set_shader_parameter("undulation_speed", 3.5)
+	_salmon_mat.set_shader_parameter("undulation_amplitude", 0.06)
+	_salmon_mat.set_shader_parameter("wave_frequency", 1.5)
 	for s in mesh.get_surface_count():
-		mesh.surface_set_material(s, mat)
+		mesh.surface_set_material(s, _salmon_mat)
 
 	mm.mesh = mesh
 	multimesh = mm
@@ -122,9 +132,10 @@ func _find_mesh_instance(node: Node) -> MeshInstance3D:
 
 
 func _spawn_fish() -> void:
-	_positions  = PackedVector3Array()
-	_velocities = PackedVector3Array()
-	_phases     = PackedFloat32Array()
+	_positions   = PackedVector3Array()
+	_velocities  = PackedVector3Array()
+	_phases      = PackedFloat32Array()
+	_flee_states = PackedByteArray()
 
 	for i in fish_count:
 		var pos := Vector3(
@@ -142,11 +153,28 @@ func _spawn_fish() -> void:
 			randf_range(-0.3, 0.3)
 		))
 		_phases.append(randf() * TAU)
+		_flee_states.append(0)
 
 
 func _process(delta: float) -> void:
+	_update_cycle()
 	_update_boids(delta)
 	_write_transforms()
+
+
+## Drive spawn_color_amount + body_alpha from a wall-clock ramp over
+## run_duration_sec. See docs/specs/2026-04-27-cycle-color-ramp-design.md.
+##
+## body_alpha ramps 1.0 (solid, fresh from ocean) → 0.6 (translucent,
+## spawning/spirit). Stays above the depth_prepass_alpha threshold so the
+## salmon keep casting shadows across the whole cycle.
+func _update_cycle() -> void:
+	if _salmon_mat == null:
+		return
+	var elapsed := Time.get_ticks_msec() * 0.001
+	var cycle_amount := clampf(elapsed / run_duration_sec, 0.0, 1.0)
+	_salmon_mat.set_shader_parameter("spawn_color_amount", cycle_amount)
+	_salmon_mat.set_shader_parameter("body_alpha", lerpf(1.0, 0.6, cycle_amount))
 
 
 func _update_boids(delta: float) -> void:
@@ -218,7 +246,19 @@ func _update_boids(delta: float) -> void:
 		# Shawn's contribution: flee force when threats are nearby.
 		# See scripts/contributions/shawn/FleeBehavior.gd
 		if enable_shawn_flee and not threats.is_empty():
-			steering += FleeBehavior.flee_force(pos, threats)
+			var fleeing := bool(_flee_states[i])
+			# Update hysteresis state before passing to flee_force
+			var nearest_threat_dist := INF
+			for t in threats:
+				nearest_threat_dist = minf(nearest_threat_dist, pos.distance_to(t))
+			if fleeing:
+				if nearest_threat_dist > FleeBehavior.FLEE_RADIUS * FleeBehavior.FLEE_STOP_MULTIPLIER:
+					fleeing = false
+			else:
+				if nearest_threat_dist < FleeBehavior.FLEE_RADIUS:
+					fleeing = true
+			_flee_states[i] = int(fleeing)
+			steering += FleeBehavior.flee_force(pos, threats, fleeing)
 
 		# River current — flow field drift, Kármán gait, pool resting
 		if river_current != null:
@@ -293,9 +333,14 @@ func _write_transforms() -> void:
 		var vel := _velocities[i]
 		if vel.length_squared() < 0.0001:
 			continue
-		# Orient fish along velocity, apply scale and mesh rotation correction
+		# Orient fish along the horizontal projection of velocity, so accumulated
+		# Y-velocity from gravity doesn't constantly pitch the school nose-down.
+		# Apply scale and mesh rotation correction.
 		var correction := Basis.from_euler(fish_rotation_offset * (PI / 180.0))
-		var fish_basis := Basis.looking_at(vel.normalized(), Vector3.UP) * correction
+		var horiz := Vector3(vel.x, 0.0, vel.z)
+		if horiz.length_squared() < 0.0001:
+			horiz = upstream_direction
+		var fish_basis := Basis.looking_at(horiz.normalized(), Vector3.UP) * correction
 		fish_basis = fish_basis.scaled(Vector3(fish_scale, fish_scale, fish_scale))
 		var t := Transform3D(fish_basis, _positions[i])
 		multimesh.set_instance_transform(i, t)

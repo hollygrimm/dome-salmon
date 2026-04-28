@@ -42,6 +42,8 @@ extends Node3D
 @export var swim_speed: float = 4.0
 @export var turn_smoothing: float = 0.15
 @export var salmon_glb_path: String = "res://assets/salmon.glb"
+@export var fish_scale: float = 0.25  # match SalmonSchool.fish_scale
+@export var mesh_rotation_offset: Vector3 = Vector3(0, 180, 0)  # GLB nose alignment
 
 var velocity: Vector3 = Vector3.ZERO
 var _mesh_instance: Node3D
@@ -62,19 +64,11 @@ func _physics_process(delta: float) -> void:
 		look_at(target, Vector3.UP)
 
 
-## Replace this stub with your input reading.
-## Default returns Vector3.ZERO (fish does not move).
 func _read_input() -> Vector3:
-	# TODO (Keanu): implement WASD + up/down input here.
-	#
-	# Your sp26-csat201-godot-KeanuBegay/Script/PlayerFish.gd already has
-	# the pattern — reuse it here. Sketch:
-	#
-	#   var planar := Input.get_vector(
-	#       "move_left", "move_right", "move_forward", "move_back")
-	#   var vertical := Input.get_axis("move_down", "move_up")
-	#   return Vector3(planar.x, vertical, planar.y) * swim_speed
-	return Vector3.ZERO
+	var planar := Input.get_vector(
+	"move_left", "move_right", "move_forward", "move_back")
+	var vertical := Input.get_axis("move_down", "move_up")
+	return Vector3(planar.x, -vertical, planar.y) * swim_speed
 
 
 func _load_mesh() -> void:
@@ -84,6 +78,8 @@ func _load_mesh() -> void:
 	if scene:
 		_mesh_instance = scene.instantiate()
 		add_child(_mesh_instance)
+		_mesh_instance.scale = Vector3.ONE * fish_scale
+		_mesh_instance.rotation_degrees = mesh_rotation_offset
 		return
 
 	# Fallback placeholder
@@ -93,8 +89,9 @@ func _load_mesh() -> void:
 	capsule.height = 0.8
 	mi.mesh = capsule
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.95, 0.35, 0.25)  # distinguish from school
+	mat.albedo_color = Color(0.861, 0.286, 0.369, 1.0)  # distinguish from school
 	mi.set_surface_override_material(0, mat)
 	add_child(mi)
+	mi.scale = Vector3.ONE * fish_scale
 	_mesh_instance = mi
 	push_warning("[PlayerFish] salmon.glb not found — using capsule placeholder.")

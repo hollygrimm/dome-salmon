@@ -8,7 +8,7 @@
 //   wave_frequency      — number of full waves along body length
 
 shader_type spatial;
-render_mode cull_back, diffuse_lambert, specular_schlick_ggx;
+render_mode blend_mix, depth_prepass_alpha, cull_back, diffuse_lambert, specular_schlick_ggx;
 
 // --- Uniforms (set from GDScript or Inspector) ---
 uniform float undulation_speed : hint_range(0.5, 10.0) = 3.0;
@@ -24,6 +24,9 @@ uniform float spawn_color_amount : hint_range(0.0, 1.0) = 0.0;
 uniform vec4 spawn_color : source_color = vec4(0.75, 0.15, 0.1, 1.0);
 
 uniform sampler2D texture_albedo : source_color, hint_default_white;
+
+// Body opacity — 1.0 = solid, lower values let water/fish behind show through.
+uniform float body_alpha : hint_range(0.0, 1.0) = 0.6;
 
 void vertex() {
 	// UV.y = 0 at tail, 1 at nose (assumes mesh UV is laid out this way)
@@ -62,4 +65,8 @@ void fragment() {
 	// Fresnel rim — wet sheen where light grazes the body edge.
 	float fresnel = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
 	ALBEDO += vec3(0.25, 0.32, 0.38) * fresnel * 0.4;
+
+	// Slight transparency — silhouette stays solid, flat-on areas soften.
+	// Fresnel boost keeps edges opaque so the fish reads as a coherent shape.
+	ALPHA = clamp(body_alpha + fresnel * 0.3, 0.0, 1.0);
 }

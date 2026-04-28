@@ -14,11 +14,13 @@ extends Node3D
 
 @onready var debug_label: Label = $DebugPanel/VBox/Label
 @onready var camera: Camera3D = $Camera3D
+@onready var salmon_school: MultiMeshInstance3D = $SalmonSchool
 
 # River geometry — built procedurally in _ready()
 var river_path: Path3D
 var river_current: RiverCurrent
 var dome_camera: DomeCamera
+var player_fish: PlayerFish
 
 # Procedural meander config
 const RIVER_LENGTH: float = 60.0
@@ -58,6 +60,7 @@ func _ready() -> void:
 	_build_river_current()
 	_wire_salmon_school()
 	_build_dome_camera()
+	_build_player_fish()
 
 
 # ── Procedural river setup ─────────────────────────────────────────────────────
@@ -96,9 +99,19 @@ func _build_river_current() -> void:
 
 ## Hand the RiverCurrent reference to SalmonSchool so its boids sample the flow.
 func _wire_salmon_school() -> void:
-	var school := $SalmonSchool as MultiMeshInstance3D
-	if school and school.has_method("set"):
-		school.set("river_current", river_current)
+	if salmon_school and salmon_school.has_method("set"):
+		salmon_school.set("river_current", river_current)
+
+
+## Spawn Keanu's PlayerFish as a hero/predator fish near the school.
+## Its position is pushed into SalmonSchool.threats each frame so Shawn's
+## FleeBehavior treats it as a threat and the school flees.
+func _build_player_fish() -> void:
+	player_fish = PlayerFish.new()
+	player_fish.name = "PlayerFish"
+	# Spawn downstream-end of the school volume, mid-water depth.
+	player_fish.global_position = Vector3(0.0, -1.4, 20.0)
+	add_child(player_fish)
 
 
 ## Replace the static Camera3D with a DomeCamera riding a PathFollow3D.
@@ -113,8 +126,11 @@ func _build_dome_camera() -> void:
 	dome_camera.name = "DomeCamera"
 	dome_camera.camera_mode = DomeCamera.CameraMode.UNDERWATER
 	dome_camera.look_ahead_distance = 14.0  # look further down the river
-	dome_camera.travel_speed = 0.015        # ~0.9 m/s, slower than fish so they catch up
+	dome_camera.loop_path = false           # hold at soft end instead of wrapping
 	follow.add_child(dome_camera)
+	# Align the camera arc with the salmon-cycle ramp so we arrive at the
+	# headwaters as the school finishes spawning. Sets travel_speed internally.
+	dome_camera.set_arc_duration(salmon_school.run_duration_sec)
 	dome_camera.make_current()
 
 	# Retire the original static camera from the scene
@@ -124,7 +140,13 @@ func _build_dome_camera() -> void:
 
 func _process(_delta: float) -> void:
 	_handle_keyboard_stubs()
+	_update_threats()
 	_update_debug()
+
+
+func _update_threats() -> void:
+	if salmon_school and player_fish:
+		salmon_school.threats = [player_fish.global_position]
 
 
 func _input(event: InputEvent) -> void:

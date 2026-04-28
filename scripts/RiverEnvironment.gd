@@ -25,6 +25,16 @@ extends Node3D
 @export var river_length: float = 60.0
 @export var water_depth: float  = 3.5   # distance from surface to bed
 
+# --- Cycle color ramp (Salmon Afterlives) ---
+## Match SalmonSchool.run_duration_sec so the warmth shift is in lock-step
+## with the spawning-flank ramp on the salmon body.
+## See docs/specs/2026-04-27-cycle-color-ramp-design.md.
+@export var run_duration_sec: float = 180.0
+@export var water_shallow_start: Color = Color(0.18, 0.42, 0.48, 0.72)  # cool teal
+@export var water_shallow_end:   Color = Color(0.45, 0.30, 0.30, 0.72)  # warm rose-grey
+@export var caustic_tint_start:  Color = Color(0.40, 0.75, 0.80, 1.0)   # cool blue
+@export var caustic_tint_end:    Color = Color(0.85, 0.55, 0.30, 1.0)   # warm amber
+
 # Turbulence driven by ParameterBank — water reacts to performer energy
 var _turbulence: float = 0.2
 
@@ -141,16 +151,24 @@ func _setup_environment() -> void:
 # --- Dynamic shader updates ---
 
 func _update_shader_params() -> void:
+	# Wall-clock cycle amount, shared with SalmonSchool's spawn-color ramp.
+	var elapsed := Time.get_ticks_msec() * 0.001
+	var cycle_amount := clampf(elapsed / run_duration_sec, 0.0, 1.0)
+
 	if water_surface and water_surface.material_override:
 		var mat := water_surface.material_override as ShaderMaterial
 		mat.set_shader_parameter("turbulence", _turbulence)
 		# Wave speed increases with urgency
 		mat.set_shader_parameter("wave_speed",
 			lerp(0.3, 1.2, ParameterBank.swim_urgency))
+		mat.set_shader_parameter("water_shallow",
+			water_shallow_start.lerp(water_shallow_end, cycle_amount))
 
 	if riverbed and riverbed.material_override:
 		var mat := riverbed.material_override as ShaderMaterial
 		mat.set_shader_parameter("turbulence", _turbulence)
+		mat.set_shader_parameter("caustic_tint",
+			caustic_tint_start.lerp(caustic_tint_end, cycle_amount))
 
 	# Sun flickers slightly during evasion (predator shadow)
 	if sun_light:
