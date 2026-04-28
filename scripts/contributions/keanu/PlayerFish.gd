@@ -32,8 +32,8 @@
 ##   move_right     → D
 ##   move_forward   → W
 ##   move_back      → S
-##   move_up        → Space (or Q)
-##   move_down      → Shift (or E)
+##   move_up        → Up-Arrow
+##   move_down      → Down-Arrow
 ## ───────────────────────────────────────────────────────────────────────────
 
 class_name PlayerFish
@@ -68,7 +68,7 @@ func _read_input() -> Vector3:
 	var planar := Input.get_vector(
 	"move_left", "move_right", "move_forward", "move_back")
 	var vertical := Input.get_axis("move_down", "move_up")
-	return Vector3(planar.x, -vertical, planar.y) * swim_speed
+	return Vector3(planar.x, vertical, planar.y) * swim_speed
 
 
 func _load_mesh() -> void:
