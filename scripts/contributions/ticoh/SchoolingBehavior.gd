@@ -41,7 +41,6 @@ class_name SchoolingBehavior
 
 static func cohesion_weight(fish_index: int, phase: float, delta: float) -> float:
 	var cohesion_value := 0.6  # eventually read from a cultural source
-	return lerp(0.8, 1.6, clamp(cohesion_value, 0.0, 1.0))
+	var personality := sin(phase) * 0.5 + 0.5
+	return lerp(0.8, 1.6, clamp(cohesion_value + personality, 0.0, 1.0))
 	
-	# Optional: use `phase` to add subtle per-fish variation so not every
-	# fish responds identically (your original fish.gd used phase for this).
