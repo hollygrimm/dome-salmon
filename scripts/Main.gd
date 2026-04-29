@@ -41,7 +41,7 @@ const STUB_ADDRESSES : PackedStringArray = [
 	"/performer/5/stillness",
 ]
 
-var _debug_visible := true
+var _debug_visible := false
 
 
 func _ready() -> void:
@@ -54,13 +54,16 @@ func _ready() -> void:
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	DisplayServer.window_set_title("DomeSalmon — OSC Port 8000")
 	print("[Main] Ready. OSC listening on port 8000.")
-	print("[Main] Keyboard stubs: 1-5 to simulate performers, D to toggle debug.")
+	print("[Main] Keyboard stubs: 1-5 to simulate performers, F3 to toggle debug.")
 
 	_build_river_path()
 	_build_river_current()
 	_wire_salmon_school()
 	_build_dome_camera()
 	_build_player_fish()
+
+	# Debug overlay starts hidden — press D to toggle on.
+	debug_label.visible = _debug_visible
 
 
 # ── Procedural river setup ─────────────────────────────────────────────────────
@@ -98,9 +101,20 @@ func _build_river_current() -> void:
 
 
 ## Hand the RiverCurrent reference to SalmonSchool so its boids sample the flow.
+## Also load the authored CulturalValue resources and assign them to the school.
 func _wire_salmon_school() -> void:
 	if salmon_school and salmon_school.has_method("set"):
 		salmon_school.set("river_current", river_current)
+		# Cultural values: authored traits that shape behavior the same way
+		# each run. Read by student contributions (Ticoh: cohesion, Jacob: care).
+		var endurance: CulturalValue = load("res://resources/salmon_endurance.tres") as CulturalValue
+		if endurance:
+			var typed_values: Array[CulturalValue] = [endurance]
+			salmon_school.set("values", typed_values)
+			print("[Main] Loaded cultural value: %s (cohesion=%.2f care=%.2f)" %
+				[endurance.name, endurance.cohesion, endurance.care])
+		else:
+			push_warning("[Main] salmon_endurance.tres not found or wrong type — school runs without cultural values.")
 
 
 ## Spawn Keanu's PlayerFish as a hero/predator fish near the school.
@@ -151,7 +165,7 @@ func _update_threats() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_D:
+		if event.keycode == KEY_F3:
 			_debug_visible = !_debug_visible
 			debug_label.visible = _debug_visible
 		if event.keycode == KEY_ESCAPE:
@@ -177,9 +191,15 @@ func _handle_keyboard_stubs() -> void:
 func _update_debug() -> void:
 	if not _debug_visible:
 		return
+	var cultural_str := ""
+	if salmon_school and salmon_school.has_method("values_debug_string"):
+		cultural_str = salmon_school.call("values_debug_string")
 	debug_label.text = (
 		"=== DomeSalmon Debug ===\n" +
+		"── Live (OSC) ──\n" +
 		ParameterBank.debug_string() +
-		"\n[D] toggle  [1-5] simulate performers  [ESC] quit\n" +
+		"\n── Cultural (authored) ──\n" +
+		cultural_str +
+		"\n[F3] toggle  [1-5] simulate performers  [ESC] quit\n" +
 		"OSC port: 8000  |  Display: fullscreen screen 1 → DisplayPort → ScreenBerry"
 	)

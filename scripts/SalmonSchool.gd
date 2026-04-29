@@ -23,6 +23,8 @@ extends MultiMeshInstance3D
 @export var weight_cohesion:   float = 0.8
 @export var weight_upstream:   float = 1.2
 @export var fish_scale:          float = 0.25          # scale each fish instance — adjust for GLB models
+## Per-fish size variation. 0.0 = uniform, 0.4 = ±40% spread. Sampled once at spawn.
+@export_range(0.0, 0.8, 0.05) var fish_scale_variance: float = 0.4
 @export var fish_rotation_offset: Vector3 = Vector3(0, 180, 0)  # degrees — LowPolySalmonv2 raw-mesh axis fix: Z180 rolls belly down, X90 lays nose forward
 
 # --- Student contribution wiring (Week 15 residency) ---
@@ -34,6 +36,14 @@ extends MultiMeshInstance3D
 @export var enable_ticoh_schooling: bool = false   # SchoolingBehavior modulator
 @export var enable_jacob_mode: bool = false        # BehaviorMode state machine
 @export var enable_shawn_flee: bool = true         # FleeBehavior per-fish force
+
+# --- Cultural values (authored, static) ---
+# CulturalValue resources carried by the school. Read by student contributions
+# (Ticoh's SchoolingBehavior reads cohesion; Jacob's BehaviorMode reads care).
+# Assigned in code from Main.gd._wire_salmon_school(), or in the Inspector.
+# Distinct from ParameterBank (live OSC, time-varying) — these are authored
+# traits that shape behavior the same way each run.
+@export var values: Array[CulturalValue] = []
 ## Threats for Shawn's flee behavior (rocks, boats, disturbance zones).
 ## Main.gd maintains this list; can be empty.
 var threats: Array = []
@@ -60,6 +70,7 @@ var river_current: RiverCurrent = null
 var _positions: PackedVector3Array
 var _velocities: PackedVector3Array
 var _phases: PackedFloat32Array      # per-fish undulation phase offset
+var _scales: PackedFloat32Array      # per-fish scale multiplier (sampled at spawn)
 var _flee_states: PackedByteArray    # per-fish hysteresis flag for FleeBehavior
 var _salmon_mat: ShaderMaterial      # held so cycle ramp can update it each frame
 
@@ -135,6 +146,7 @@ func _spawn_fish() -> void:
 	_positions   = PackedVector3Array()
 	_velocities  = PackedVector3Array()
 	_phases      = PackedFloat32Array()
+	_scales      = PackedFloat32Array()
 	_flee_states = PackedByteArray()
 
 	for i in fish_count:
@@ -153,6 +165,10 @@ func _spawn_fish() -> void:
 			randf_range(-0.3, 0.3)
 		))
 		_phases.append(randf() * TAU)
+		# Gaussian: most fish near baseline, rare outliers. stddev = variance*0.4
+		# means ~95% land within ±2σ ≈ ±0.32 of baseline at default variance=0.4.
+		# Clamp tail so a freak +4σ doesn't produce a 2.6× monster.
+		_scales.append(clampf(1.0 + randfn(0.0, fish_scale_variance * 0.4), 0.4, 1.8))
 		_flee_states.append(0)
 
 
@@ -341,7 +357,8 @@ func _write_transforms() -> void:
 		if horiz.length_squared() < 0.0001:
 			horiz = upstream_direction
 		var fish_basis := Basis.looking_at(horiz.normalized(), Vector3.UP) * correction
-		fish_basis = fish_basis.scaled(Vector3(fish_scale, fish_scale, fish_scale))
+		var s := fish_scale * _scales[i]
+		fish_basis = fish_basis.scaled(Vector3(s, s, s))
 		var t := Transform3D(fish_basis, _positions[i])
 		multimesh.set_instance_transform(i, t)
 
@@ -365,3 +382,15 @@ func _soft_clamp(value: float, half_extent: float) -> float:
 	if absf(value) > inner:
 		return value + (-sign(value) * (absf(value) - inner) * 0.3)
 	return value
+
+
+## Debug helper for Main._update_debug(). Returns a multi-line string showing
+## the authored cultural values carried by this school.
+func values_debug_string() -> String:
+	if values.is_empty():
+		return "(no values assigned)\n"
+	var s := ""
+	for v in values:
+		var label := v.name if v.name != "" else "(unnamed)"
+		s += "%s: cohesion=%.2f care=%.2f\n" % [label, v.cohesion, v.care]
+	return s
