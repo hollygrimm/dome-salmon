@@ -45,6 +45,9 @@ var _debug_visible := false
 
 
 func _ready() -> void:
+	# Hide the OS cursor — dome demo is passive viewing, no pointer needed.
+	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
+
 	# Dome demo: launch fullscreen on the second display if present.
 	# Dome is 1:1 aspect; Mac Mini M4 second display maxes at 3840x2160,
 	# so a square viewport letterboxes cleanly via stretch aspect "keep".
