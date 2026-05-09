@@ -1,4 +1,6 @@
-## SchoolingBehavior.gd — Ticoh's contribution to dome-salmon
+## SchoolingBehavior.gd — per-fish cohesion modulation.
+## Originally contributed by Ticoh Japp during CSAT201,
+## Institute of American Indian Arts, Spring 2026.
 ##
 ## Ports the cohesion → orbit-radius pattern from Ticoh's pilot-fish ecosystem
 ## (sp26-csat201-godot-ticohj/scripts/fish.gd:21-52) into dome-salmon's
@@ -39,8 +41,7 @@
 
 class_name SchoolingBehavior
 
-static func cohesion_weight(fish_index: int, phase: float, delta: float) -> float:
+static func cohesion_weight(_fish_index: int, phase: float, _delta: float) -> float:
 	var cohesion_value := 0.6  # eventually read from a cultural source
 	var personality := sin(phase) * 0.5 + 0.5
 	return lerp(0.8, 1.6, clamp(cohesion_value + personality, 0.0, 1.0))
-	

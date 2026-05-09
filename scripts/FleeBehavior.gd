@@ -1,4 +1,6 @@
-## FleeBehavior.gd — Shawn's contribution to dome-salmon
+## FleeBehavior.gd — per-fish flee force from threats, with hysteresis.
+## Originally contributed by Shawn Olivar during CSAT201,
+## Institute of American Indian Arts, Spring 2026.
 ##
 ## Ports the deer-flees-from-lion pattern from Shawn's 2D desert ecosystem
 ## (sp26-csat201-godot-solivar/scripts/Deer2D.gd:14-30) into a per-fish

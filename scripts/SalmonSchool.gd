@@ -27,12 +27,11 @@ extends MultiMeshInstance3D
 @export_range(0.0, 0.8, 0.05) var fish_scale_variance: float = 0.4
 @export var fish_rotation_offset: Vector3 = Vector3(0, 180, 0)  # degrees — LowPolySalmonv2 raw-mesh axis fix: Z180 rolls belly down, X90 lays nose forward
 
-# --- Student contribution wiring (Week 15 residency) ---
-# Each CSAT201 student contributes one file under scripts/contributions/.
-# Uncomment each hook as its PR lands. If a contribution doesn't arrive in
-# time, leave the hook commented — the school runs fine without it.
-#
-# See docs/CONTRIBUTING.md and scripts/contributions/{name}/README.md.
+# --- Student contribution wiring ---
+# Hooks for the four CSAT201 contributions. Each toggle gates one student's
+# class into the per-fish steering loop; with all toggles off, the school
+# behaves as a plain boid. See SchoolingBehavior.gd, FleeBehavior.gd,
+# PlayerFish.gd, and contributions/jacob/BehaviorMode.gd for attribution.
 @export var enable_ticoh_schooling: bool = false   # SchoolingBehavior modulator
 @export var enable_jacob_mode: bool = false        # BehaviorMode state machine
 @export var enable_shawn_flee: bool = true         # FleeBehavior per-fish force
@@ -237,7 +236,7 @@ func _update_boids(delta: float) -> void:
 			steering += align_force * weight_alignment
 
 			# Ticoh's contribution: per-fish cohesion weight modulator.
-			# See scripts/contributions/ticoh/SchoolingBehavior.gd
+			# See scripts/SchoolingBehavior.gd
 			var ticoh_mod := 1.0
 			if enable_ticoh_schooling:
 				ticoh_mod = SchoolingBehavior.cohesion_weight(i, _phases[i], delta)
@@ -248,19 +247,19 @@ func _update_boids(delta: float) -> void:
 		var upstream_bias := upstream_direction * up_force * weight_upstream
 
 		# Jacob's contribution: per-fish behavior mode (WANDER ↔ SEEK_UPSTREAM).
-		# See scripts/contributions/jacob/BehaviorMode.gd
+		# See scripts/contributions/jacob/BehaviorMode.gd (stub — pending PR)
 		if enable_jacob_mode:
 			var river_progress: float = clamp(
 				(spawn_center_z + spawn_volume.z * 0.5 - pos.z) / spawn_volume.z,
 				0.0, 1.0)
 			var elapsed: float = Time.get_ticks_msec() * 0.001
 			var mode: int = BehaviorMode.mode_for(i, river_progress, elapsed)
-			var scale: Dictionary = BehaviorMode.force_scale(mode)
-			upstream_bias *= scale.get("upstream", 1.0)
-			mode_speed_scale = scale.get("speed", 1.0)
+			var mode_scale: Dictionary = BehaviorMode.force_scale(mode)
+			upstream_bias *= mode_scale.get("upstream", 1.0)
+			mode_speed_scale = mode_scale.get("speed", 1.0)
 
 		# Shawn's contribution: flee force when threats are nearby.
-		# See scripts/contributions/shawn/FleeBehavior.gd
+		# See scripts/FleeBehavior.gd
 		if enable_shawn_flee and not threats.is_empty():
 			var fleeing := bool(_flee_states[i])
 			# Update hysteresis state before passing to flee_force

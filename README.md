@@ -9,25 +9,24 @@ Dome visualization: 5 OSC sensor performers → hundreds of salmon → TouchDesi
 ```
 dome_salmon/
 ├── project.godot
-├── docs/
-│   └── CONTRIBUTING.md       ← PR workflow for CSAT201 student contributions
 ├── scripts/
-│   ├── OSCReceiver.gd        ← Autoload: UDP listener + OSC parser
-│   ├── ParameterBank.gd      ← Autoload: smoothed behavioral params
-│   ├── SalmonSchool.gd       ← MultiMeshInstance3D boids controller
-│   ├── RiverEnvironment.gd   ← Water, riverbed, lighting, fog
-│   ├── Main.gd               ← Scene root, debug overlay, keyboard stubs
-│   └── contributions/        ← Week 15 student PRs land here
-│       ├── ticoh/            ← SchoolingBehavior (cohesion modulator)
-│       ├── jacob/            ← BehaviorMode (WANDER ↔ SEEK_UPSTREAM)
-│       ├── keanu/            ← PlayerFish (WASD-piloted hero salmon)
-│       └── shawn/            ← FleeBehavior (flee force from threats)
+│   ├── OSCReceiver.gd          ← Autoload: UDP listener + OSC parser
+│   ├── ParameterBank.gd        ← Autoload: smoothed behavioral params
+│   ├── SalmonSchool.gd         ← MultiMeshInstance3D boids controller
+│   ├── RiverEnvironment.gd     ← Water, riverbed, lighting, fog
+│   ├── Main.gd                 ← Scene root, debug overlay, keyboard stubs
+│   ├── SchoolingBehavior.gd    ← Per-fish cohesion modulator (Ticoh)
+│   ├── FleeBehavior.gd         ← Per-fish flee force from threats (Shawn)
+│   ├── PlayerFish.gd           ← WASD-piloted hero salmon (Keanu)
+│   └── contributions/
+│       └── jacob/
+│           └── BehaviorMode.gd ← WANDER ↔ SEEK_UPSTREAM contract (Jacob, stub pending PR)
 ├── shaders/
-│   ├── salmon_body.gdshader  ← Vertex undulation + spawning coloration
-│   ├── water_surface.gdshader ← Animated translucent water
-│   └── riverbed.gdshader     ← Rocky bed with caustic light
+│   ├── salmon_body.gdshader    ← Vertex undulation + spawning coloration
+│   ├── water_surface.gdshader  ← Animated translucent water
+│   └── riverbed.gdshader       ← Rocky bed with caustic light
 ├── scenes/
-│   └── Main.tscn             ← Build this manually (see Scene Setup below)
+│   └── Main.tscn               ← Build this manually (see Scene Setup below)
 └── assets/
     └── (salmon.glb goes here when ready)
 ```

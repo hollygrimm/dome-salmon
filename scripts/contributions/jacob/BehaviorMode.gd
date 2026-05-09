@@ -1,4 +1,6 @@
-## BehaviorMode.gd — Jacob's contribution to dome-salmon
+## BehaviorMode.gd — per-fish WANDER ↔ SEEK_UPSTREAM state-machine contract.
+## Originally contributed by Jacob Crazy Bull during CSAT201,
+## Institute of American Indian Arts, Spring 2026.
 ##
 ## Ports the OBSERVING ↔ CARING state-machine pattern from Jacob's desert
 ## ecosystem Person.gd (sp26-csat201-godot-JacobCrazyBull/scripts/Person.gd)

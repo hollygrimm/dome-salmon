@@ -1,4 +1,6 @@
-## PlayerFish.gd — Keanu's contribution to dome-salmon
+## PlayerFish.gd — WASD-piloted hero salmon the school responds to as a presence.
+## Originally contributed by Keanu Begay during CSAT201,
+## Institute of American Indian Arts, Spring 2026.
 ##
 ## A single viewer-controlled salmon that swims alongside the MultiMesh
 ## school. WASD moves in the XZ plane, Q/E or Space/Shift moves up/down.
