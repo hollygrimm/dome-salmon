@@ -1,14 +1,11 @@
-[gd_resource type="Resource" script_class="CulturalValue" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="CulturalValue" format=3 uid="uid://bgmjt2lvuuaty"]
 
-[ext_resource type="Script" path="res://scripts/CulturalValue.gd" id="1_culturalvalue"]
+[ext_resource type="Script" uid="uid://c2t17ccrwbh56" path="res://scripts/CulturalValue.gd" id="1_culturalvalue"]
 
 [resource]
 script = ExtResource("1_culturalvalue")
 name = "Endurance"
 description = "The salmon's long carry — holding strength through the wandering miles, then giving it all to the upstream push at the headwaters. High cohesion keeps the school together through the run; care holds the wandering longer before the spawning urgency tips them upstream."
-cohesion = 0.7
-generosity = 0.0
-playfulness = 0.0
-persistence = 0.0
-restraint = 0.0
+cohesion = 0.6
+playfulness = 1.0
 care = 0.6

@@ -32,7 +32,7 @@ extends MultiMeshInstance3D
 # class into the per-fish steering loop; with all toggles off, the school
 # behaves as a plain boid. See SchoolingBehavior.gd, FleeBehavior.gd,
 # PlayerFish.gd, and contributions/jacob/BehaviorMode.gd for attribution.
-@export var enable_ticoh_schooling: bool = false   # SchoolingBehavior modulator
+@export var enable_ticoh_schooling: bool = true    # SchoolingBehavior modulator
 @export var enable_jacob_mode: bool = false        # BehaviorMode state machine
 @export var enable_shawn_flee: bool = true         # FleeBehavior per-fish force
 
@@ -203,6 +203,12 @@ func _update_boids(delta: float) -> void:
 	var rest        : float = ParameterBank.rest_factor
 	var vert_energy : float = ParameterBank.vertical_energy
 
+	# Authored cultural traits — averaged across CulturalValue resources
+	# carried by the school. Passed into Ticoh's SchoolingBehavior so the
+	# .tres values actually drive per-fish cohesion modulation.
+	var cultural_cohesion: float = _average_cultural_cohesion()
+	var cultural_playfulness: float = _average_cultural_playfulness()
+
 	for i in fish_count:
 		var pos := _positions[i]
 		var vel := _velocities[i]
@@ -239,7 +245,7 @@ func _update_boids(delta: float) -> void:
 			# See scripts/SchoolingBehavior.gd
 			var ticoh_mod := 1.0
 			if enable_ticoh_schooling:
-				ticoh_mod = SchoolingBehavior.cohesion_weight(i, _phases[i], delta)
+				ticoh_mod = SchoolingBehavior.cohesion_weight(i, _phases[i], delta, cultural_cohesion, cultural_playfulness)
 			steering += to_center * cohesion_w * ticoh_mod
 
 		# Upstream bias — accumulated separately so pool-holding can dampen
@@ -381,6 +387,30 @@ func _soft_clamp(value: float, half_extent: float) -> float:
 	if absf(value) > inner:
 		return value + (-sign(value) * (absf(value) - inner) * 0.3)
 	return value
+
+
+## Average `cohesion` across the CulturalValue resources carried by this
+## school. Falls back to 0.6 (Ticoh's original baseline) when no values are
+## assigned, so empty schools keep visibly meaningful behavior.
+func _average_cultural_cohesion() -> float:
+	if values.is_empty():
+		return 0.6
+	var sum := 0.0
+	for v in values:
+		sum += v.cohesion
+	return sum / values.size()
+
+
+## Average `playfulness` across the CulturalValue resources carried by this
+## school. Falls back to 1.0 when no values are assigned, preserving Ticoh's
+## original full per-fish personality variation.
+func _average_cultural_playfulness() -> float:
+	if values.is_empty():
+		return 1.0
+	var sum := 0.0
+	for v in values:
+		sum += v.playfulness
+	return sum / values.size()
 
 
 ## Debug helper for Main._update_debug(). Returns a multi-line string showing

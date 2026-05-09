@@ -13,12 +13,18 @@
 ## point that way.
 ##
 ## ─── CONTRACT ──────────────────────────────────────────────────────────────
-## Implement `cohesion_weight(fish_index, phase, delta) -> float`.
+## Implement `cohesion_weight(fish_index, phase, delta,
+##                            cultural_cohesion, cultural_playfulness) -> float`.
 ##
 ## Inputs:
-##   fish_index — which fish in the school (0 to fish_count - 1)
-##   phase      — per-fish phase offset in [0, TAU); already randomized
-##   delta      — frame time in seconds
+##   fish_index           — which fish in the school (0 to fish_count - 1)
+##   phase                — per-fish phase offset in [0, TAU); already randomized
+##   delta                — frame time in seconds
+##   cultural_cohesion    — averaged `cohesion` across SalmonSchool.values, in
+##                          [0.0, 1.0]. Drives the school's baseline tightness.
+##   cultural_playfulness — averaged `playfulness` across SalmonSchool.values, in
+##                          [0.0, 1.0]. Scales per-fish personality variation:
+##                          0.0 = uniform/disciplined school, 1.0 = erratic school.
 ##
 ## Return:
 ##   A non-negative multiplier. 1.0 = neutral (no change).
@@ -41,7 +47,6 @@
 
 class_name SchoolingBehavior
 
-static func cohesion_weight(_fish_index: int, phase: float, _delta: float) -> float:
-	var cohesion_value := 0.6  # eventually read from a cultural source
-	var personality := sin(phase) * 0.5 + 0.5
-	return lerp(0.8, 1.6, clamp(cohesion_value + personality, 0.0, 1.0))
+static func cohesion_weight(_fish_index: int, phase: float, _delta: float, cultural_cohesion: float, cultural_playfulness: float) -> float:
+	var personality := (sin(phase) * 0.5 + 0.5) * cultural_playfulness
+	return lerp(0.8, 1.6, clamp(cultural_cohesion + personality, 0.0, 1.0))
