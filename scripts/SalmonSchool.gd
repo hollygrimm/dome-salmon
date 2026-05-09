@@ -27,9 +27,9 @@ extends MultiMeshInstance3D
 @export_range(0.0, 0.8, 0.05) var fish_scale_variance: float = 0.4
 @export var fish_rotation_offset: Vector3 = Vector3(0, 180, 0)  # degrees — LowPolySalmonv2 raw-mesh axis fix: Z180 rolls belly down, X90 lays nose forward
 
-# --- Student contribution wiring ---
-# Hooks for the four CSAT201 contributions. Each toggle gates one student's
-# class into the per-fish steering loop; with all toggles off, the school
+# --- Contribution wiring ---
+# Per-fish hooks for the four student contributions. Each toggle gates one
+# contribution into the steering loop; with all toggles off, the school
 # behaves as a plain boid. See SchoolingBehavior.gd, FleeBehavior.gd,
 # PlayerFish.gd, and contributions/jacob/BehaviorMode.gd for attribution.
 @export var enable_ticoh_schooling: bool = true    # SchoolingBehavior modulator

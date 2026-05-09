@@ -1,6 +1,6 @@
 # Cycle Color Ramp — Design
 
-*Author: Holly Grimm. Drafted Mon Apr 27, 2026 for Week 15 (May 8 finals draft).*
+*Author: Holly Grimm. Drafted April 2026.*
 
 ## Context
 

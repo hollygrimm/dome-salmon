@@ -1,14 +1,21 @@
 ## Main.gd
-## Root scene controller.
-## Handles: debug UI, window sizing for TouchDesigner capture, keyboard stubs.
+## Root scene controller. Handles fullscreen dome window setup, debug UI,
+## and keyboard stubs for simulating performer OSC.
 ##
-## Scene tree:
-##   Main (Node3D)          ← this script
-##   ├── Camera3D
+## Static scene tree (from Main.tscn):
+##   Main (Node3D)              ← this script
+##   ├── Camera3D                  (replaced at runtime by DomeCamera)
 ##   ├── DirectionalLight3D
 ##   ├── SalmonSchool (MultiMeshInstance3D + SalmonSchool.gd)
-##   ├── RiverEnvironment (Node3D — placeholder)
+##   ├── RiverEnvironment (Node3D + RiverEnvironment.gd)
+##   │     ├── WaterSurface, Riverbed, SunLight, WorldEnvironment
 ##   └── DebugPanel (CanvasLayer > VBoxContainer > Label)
+##
+## Procedurally added in _ready():
+##   - RiverPath (Path3D, sinusoidal meander)
+##   - RiverCurrent (RiverCurrent.gd, samples flow along path)
+##   - PathFollow3D + DomeCamera (rides the river path, dome aspect)
+##   - PlayerFish (Keanu's WASD-piloted hero salmon)
 
 extends Node3D
 
