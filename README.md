@@ -17,10 +17,10 @@ This project includes contributions from four CSAT201 students at the
 
 | Student | Contribution | Repository |
 |---------|--------------|------------|
-| **Ticoh Japp** | `scripts/SchoolingBehavior.gd` — per-fish cohesion modulation that gives the school internal variation while keeping it tight | [cs-iaia/sp26-csat201-godot-ticohj](https://github.com/cs-iaia/sp26-csat201-godot-ticohj) |
-| **Shawn Olivar** | `scripts/FleeBehavior.gd` — flee force from threats, with hysteresis so fish don't flicker between states | [cs-iaia/sp26-csat201-godot-solivar](https://github.com/cs-iaia/sp26-csat201-godot-solivar) |
-| **Keanu Begay** | `scripts/PlayerFish.gd` — WASD-piloted hero salmon that the school responds to as a presence | [cs-iaia/sp26-csat201-godot-KeanuBegay](https://github.com/cs-iaia/sp26-csat201-godot-KeanuBegay) |
-| **Jacob Crazy Bull** | `scripts/contributions/jacob/BehaviorMode.gd` — design contract for a per-fish WANDER ↔ SEEK_UPSTREAM state machine (interface defined; implementation pending) | [cs-iaia/sp26-csat201-godot-JacobCrazyBull](https://github.com/cs-iaia/sp26-csat201-godot-JacobCrazyBull) |
+| **Ticoh Japp**, Cree Saulteaux (Cowessess First Nation) | `scripts/SchoolingBehavior.gd` — per-fish cohesion modulation that gives the school internal variation while keeping it tight | [cs-iaia/sp26-csat201-godot-ticohj](https://github.com/cs-iaia/sp26-csat201-godot-ticohj) |
+| **Shawn Olivar**, Pueblo of Acoma | `scripts/FleeBehavior.gd` — flee force from threats, with hysteresis so fish don't flicker between states | [cs-iaia/sp26-csat201-godot-solivar](https://github.com/cs-iaia/sp26-csat201-godot-solivar) |
+| **Keanu Begay** | `scripts/PlayerFish.gd` — WASD-piloted hero salmon that the school responds to as a presence | — |
+| **Jacob Crazy Bull** | `scripts/contributions/jacob/BehaviorMode.gd` — design contract for a per-fish WANDER ↔ SEEK_UPSTREAM state machine (interface defined; implementation pending) | — |
 
 The students contributed as creative technologists supporting the artist's
 vision. Course taught by **Holly Grimm (Diné)**.
