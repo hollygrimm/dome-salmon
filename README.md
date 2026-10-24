@@ -140,3 +140,17 @@ manager. They handle the pipeline downstream of the Godot output.
   (`RenderingDevice` in Godot 4) — current implementation writes MultiMesh
   transforms on the CPU each frame.
 - Profile with Godot's built-in profiler (Debug → Profiler).
+
+---
+
+## License
+
+[![CC BY-NC 4.0](https://licensebuttons.net/l/by-nc/4.0/88x31.png)](https://creativecommons.org/licenses/by-nc/4.0/)
+
+© 2026 Ashley Cordes and the contributors listed above.
+
+This work is licensed under a
+[Creative Commons Attribution-NonCommercial 4.0 International License](https://creativecommons.org/licenses/by-nc/4.0/)
+(CC BY-NC 4.0). You may share and adapt it for non-commercial purposes, as
+long as you give appropriate credit to the artist and contributors. See
+[`LICENSE`](LICENSE) for the full legal text.
